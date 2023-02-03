@@ -1,12 +1,9 @@
-import requests
-import Bio
-import matplotlib
+import sys
+sys.path.append("Dependencies")
 from Bio import Entrez, SeqIO
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
-from Bio import Align, AlignIO, Phylo
+from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
-from Bio.Align import AlignInfo
-from Bio.SeqRecord import SeqRecord
 
 entry = ''
 def DNA_to_RNA(entry):
