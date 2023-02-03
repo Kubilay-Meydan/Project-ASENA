@@ -3,11 +3,11 @@ import Bio
 import matplotlib
 from Bio import Entrez, SeqIO
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
-from Bio import AlignIO
 from Bio import Align, AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
-from Bio import AlignIO
-''''
+from Bio.Align import AlignInfo
+from Bio.SeqRecord import SeqRecord
+
 entry = ''
 def DNA_to_RNA(entry):
     ans = ''
@@ -21,9 +21,8 @@ def DNA_to_RNA(entry):
         if char == 't':
             ans+=('u')
     return ans
-DNA_to_RNA('AATTTTTGGGGGCCCCC')
 
-Entrez.email = "theicebreakerofficial@gmail.com"  # replace with your email address
+Entrez.email = "your@email.com"  # replace with your email address
 
 def get_genbank_info(gene_id):
     with open(str(gene_id)+'.txt', 'w') as f:
@@ -71,11 +70,7 @@ def get_genbank_info(gene_id):
                 f.write('\n')
                 numberintron += 1
 
-gene_id = 'L15440.1'
-#get_genbank_info(gene_id)
 
-# List of protein accession numbers
-accessions = ['P66928','P14949']
 
 def get_sequence(acc, seq_type='protein'):
     Entrez.email = 'your_email@example.com' # required by NCBI
@@ -88,15 +83,20 @@ def get_sequence(acc, seq_type='protein'):
     else:
         return None
 
-sequences = []
-for e in accessions:
-    sequences.append(str(get_sequence(e)))
+def all_sequences(accessions):
+    sequences = []
+    for e in accessions:
+        sequences.append(str(get_sequence(e)))
+    return sequences
 
-'''
-from Bio import AlignIO
-from Bio.Align import AlignInfo
-from Bio.SeqRecord import SeqRecord
-from Bio.Align.Applications import MuscleCommandline
+def write_fasta(sequences, names):
+    with open("output.fasta", "w") as fasta:
+        for seq, name in zip(sequences, names):
+            fasta.write(">" + name + "\n")
+            fasta.write(seq + "\n")
+
+
+
 def Align_muscle(sequences,output):
 # Align the sequences using muscle
     muscle_exe = "muscle.exe"
@@ -104,12 +104,8 @@ def Align_muscle(sequences,output):
     cline()
     alignment = AlignIO.read(output, "clustal")
     return alignment
-Align_muscle('sequences.fasta','aligned')
 
 
-from Bio import AlignIO
-from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
-from Bio import Phylo
 
 def make_phylogenetic_tree_bof(alignment_file):
     # Load the multiple sequence alignment from file
@@ -123,16 +119,38 @@ def make_phylogenetic_tree_bof(alignment_file):
     # Draw and show the tree
     Phylo.draw(tree)
 
+
+
+
+# List of protein accession numbers
+accessions = ['P66928','P14949','P10599','P34723','P0A4L3','P0AA25','P08629','P10639','P42115']
+# List of protein names 
+names = ['THIO_HELPY', 'THIO_BACSU', 'THIO_HUMAN', 'THIO_PENCH', 'THIO_LISMO','THIO_ECOLI', 'THIO_CHICK', 'THIO_MOUSE', 'THIO_NEUCR']
+
+
+#
+#       Gene id for human insulin, gets Exon and Intron details:
+#
+
+gene_id = 'L15440.1'
+get_genbank_info(gene_id)
+
+#
+#       Makes Phylo tree from accession:
+#
+
+#   Writes protein sequences to a fasta file using the uniprot accessions above and the names list given by user:
+sequences = all_sequences(accessions)
+write_fasta(sequences,names)
+
+#   Uses MUSCLE alignement to make a Multiple Sequence Alignement File
+Align_muscle('output.fasta','aligned')
+
+#   Makes a simple Phylo tree, no bootstrap yet
 make_phylogenetic_tree_bof('aligned')
 
 
 '''
-
-
-
-
-
-
 Bootsrap???
 
 
