@@ -1,2 +1,0 @@
-[console_scripts]
-seqio_cache_tasks = seqio.scripts.cache_tasks_main:console_entry_point
