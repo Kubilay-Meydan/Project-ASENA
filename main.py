@@ -1,5 +1,5 @@
 import sys
-sys.path.append('dp')
+sys.path.insert(0,'dp')
 from Bio import Entrez, SeqIO
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from Bio import AlignIO, Phylo
