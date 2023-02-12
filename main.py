@@ -1,3 +1,4 @@
+#possible problème avec .exe
 from Bio import Entrez, SeqIO
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from Bio import AlignIO, Phylo
