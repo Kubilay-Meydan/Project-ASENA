@@ -1,0 +1,5 @@
+The frequency 'att' was found at the following positions in the input string:
+Position 1: 0
+Position 2: 7
+Position 3: 15
+Position 4: 19

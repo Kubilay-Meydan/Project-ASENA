@@ -65,3 +65,29 @@ def calc_hydrophobicity(sequence):
             hydrophobicity += hydrophobicity_values[aa]
 
     return hydrophobicity
+
+frequency = "att"
+string = "attgttgattgccgtattgatt"
+
+def find_and_write_all_frequency_recurrences(string, frequency):
+    """
+    This function searches for all recurrences of a given frequency in the input string and writes the results to a file.
+    """
+    start = 0
+    result = []
+    while True:
+        index = string.find(frequency, start)
+        if index == -1:
+            break
+        result.append(index)
+        start = index + 1
+    
+    with open("frequency_recurrence_result.txt", "w") as file:
+        if result:
+            file.write("The frequency '{}' was found at the following positions in the input string:\n".format(frequency))
+            for i, pos in enumerate(result):
+                file.write("Position {}: {}\n".format(i+1, pos))
+        else:
+            file.write("The frequency '{}' was not found in the input string.".format(frequency))
+
+find_and_write_all_frequency_recurrences(string, frequency)
