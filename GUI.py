@@ -6,10 +6,6 @@ class TextEditor(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Set window title and dimensions
-        self.setWindowTitle('Text Editor')
-        self.showMaximized()
-
         # Create main toolbar with buttons A, B, C, and Text Editor
         main_toolbar = self.addToolBar('Main Toolbar')
         main_toolbar.setMovable(False) # Disable toolbar movement
@@ -24,6 +20,7 @@ class TextEditor(QMainWindow):
 
         # Create toolbar for text editor with buttons for File, Save, Font, and Close
         editor_toolbar = QToolBar()
+        editor_toolbar.setObjectName("Editor Toolbar")
         editor_toolbar.setMovable(False) # Disable toolbar movement
 
         # Create buttons for text editor toolbar
@@ -56,13 +53,18 @@ class TextEditor(QMainWindow):
         splitter = QSplitter(Qt.Horizontal)
         splitter.addWidget(QLabel())
         splitter.addWidget(editor_widget)
-        splitter.moveSplitter(self.width() * 1, 1)
+        splitter.setHandleWidth(1)
+        splitter.setStyleSheet("QSplitter::handle { background-color: gray; } QSplitter { background-color: lightgray; }")
         self.setCentralWidget(splitter)
         splitter.show()
-
+        # Set window title and dimensions
+        self.setWindowTitle('KN Gui')
+        self.showMaximized()  # Set the window to take up the full screen on first open
+        splitter.moveSplitter(1,0)
     def open_file(self):
         # Open file dialog to select file
         file_name, _ = QFileDialog.getOpenFileName(self, 'Open File', '', 'Text Files (*.txt);;All Files (*)')
+        print(file_name)  # Print the selected file name to the console
         if file_name:
             # Read file and set text in text edit widget
             with open(file_name, 'r') as file:
@@ -83,13 +85,19 @@ class TextEditor(QMainWindow):
             self.text_edit.setFont(font)
 
     def close_editor(self):
-        # Hide the text edit widget
+        # Hide the text edit widget and its toolbar
         self.text_edit.hide()
+        self.findChild(QToolBar, "Editor Toolbar").hide()
+        # Hide the splitter widget
+        self.centralWidget().hide()
 
     def new_file(self):
-        # Clear text in text edit widget and show the text edit widget
+        # Clear text in text edit widget and show the text edit widget and its toolbar
         self.text_edit.clear()
         self.text_edit.show()
+        self.findChild(QToolBar, "Editor Toolbar").show()
+        # Show the splitter widget
+        self.centralWidget().show()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
