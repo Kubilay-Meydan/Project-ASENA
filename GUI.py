@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt
 import sys
+from PyQt5.QtGui import QPixmap
 
 class TextEditor(QMainWindow):
     def __init__(self):
@@ -12,7 +13,6 @@ class TextEditor(QMainWindow):
         main_toolbar.addAction('A')
         main_toolbar.addAction('B')
         main_toolbar.addAction('C')
-        main_toolbar.addAction('Text Editor', self.new_file)
 
         # Create widget for text editor
         editor_widget = QWidget()
@@ -27,19 +27,16 @@ class TextEditor(QMainWindow):
         file_button = QPushButton('File')
         save_button = QPushButton('Save')
         font_button = QPushButton('Font')
-        close_button = QPushButton('Close')
 
         # Connect buttons to their respective functions
         file_button.clicked.connect(self.open_file)
         save_button.clicked.connect(self.save_file)
         font_button.clicked.connect(self.change_font)
-        close_button.clicked.connect(self.close_editor)
 
         # Add buttons to the text editor toolbar
         editor_toolbar.addWidget(file_button)
         editor_toolbar.addWidget(save_button)
         editor_toolbar.addWidget(font_button)
-        editor_toolbar.addWidget(close_button)
 
         # Create text edit widget
         self.text_edit = QTextEdit()
@@ -50,17 +47,40 @@ class TextEditor(QMainWindow):
 
         # Set the editor widget layout and add to the main window
         editor_widget.setLayout(editor_layout)
-        splitter = QSplitter(Qt.Horizontal)
-        splitter.addWidget(QLabel())
-        splitter.addWidget(editor_widget)
-        splitter.setHandleWidth(1)
-        splitter.setStyleSheet("QSplitter::handle { background-color: gray; } QSplitter { background-color: lightgray; }")
-        self.setCentralWidget(splitter)
-        splitter.show()
+
+        # Create a triangle logo widget
+        triangle_widget = QWidget()
+        triangle_layout = QVBoxLayout()
+
+        triangle_pixmap = QPixmap('triangle.png')
+        triangle_label = QLabel()
+        triangle_label.setPixmap(triangle_pixmap)
+
+        triangle_layout.addWidget(triangle_label, alignment=Qt.AlignRight)
+        triangle_widget.setLayout(triangle_layout)
+
+        # Create a splitter widget and add it to a vertical box layout with the text editor widget
+        splitter_widget = QSplitter(Qt.Horizontal)
+        splitter_widget.addWidget(triangle_widget)
+        splitter_widget.addWidget(editor_widget)
+        splitter_widget.setHandleWidth(10)
+        splitter_widget.setStyleSheet("QSplitter::handle { background-color: gray; } QSplitter { background-color: lightgray; }")
+        splitter_widget.show()
+
+        # Create a central widget to hold the splitter widget
+        central_widget = QWidget()
+        central_layout = QVBoxLayout()
+
+        central_layout.addWidget(splitter_widget)
+        central_widget.setLayout(central_layout)
+
+        self.setCentralWidget(central_widget)
+
         # Set window title and dimensions
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
-        splitter.moveSplitter(1,0)
+
+
     def open_file(self):
         # Open file dialog to select file
         file_name, _ = QFileDialog.getOpenFileName(self, 'Open File', '', 'Text Files (*.txt);;All Files (*)')
@@ -83,13 +103,6 @@ class TextEditor(QMainWindow):
         font, ok = QFontDialog.getFont()
         if ok:
             self.text_edit.setFont(font)
-
-    def close_editor(self):
-        # Hide the text edit widget and its toolbar
-        self.text_edit.hide()
-        self.findChild(QToolBar, "Editor Toolbar").hide()
-        # Hide the splitter widget
-        self.centralWidget().hide()
 
     def new_file(self):
         # Clear text in text edit widget and show the text edit widget and its toolbar
