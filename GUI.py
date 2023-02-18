@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 import sys
@@ -14,9 +14,80 @@ class TextEditor(QMainWindow):
         # Create main toolbar with buttons A, B, C, and Text Editor
         main_toolbar = self.addToolBar('Main Toolbar')
         main_toolbar.setMovable(False) # Disable toolbar movement
-        main_toolbar.addAction('A')
-        main_toolbar.addAction('B')
-        main_toolbar.addAction('C')
+
+        #Create Widget File with sub-buttons
+        file_menu = QMenu('File', self)
+        new_action = QAction('New', self)
+        new_action.setShortcut('Ctrl+N')
+        open_action = QAction('Open', self)
+        open_action.setShortcut('Ctrl+O')
+        save_action = QAction('Save', self)
+        save_action.setShortcut('Ctrl+S')
+        save_as_action = QAction('Save As', self)
+        file_menu.addAction(new_action)
+        file_menu.addAction(open_action)
+        file_menu.addAction(save_action)
+        file_menu.addAction(save_as_action)
+        file_button = QPushButton('File')
+        file_button.setMenu(file_menu)
+        main_toolbar.addWidget(file_button)
+        
+        # Connect buttons to their respective functions
+        new_action.triggered.connect(self.new_file)
+        open_action.triggered.connect(lambda: self.open_save_file_dialog('Open File', 'r'))
+        save_action.triggered.connect(lambda: self.open_save_file_dialog('Save File', 'w'))
+        save_as_action.triggered.connect(lambda: self.open_save_file_dialog('Save File As', 'w'))
+
+        # Create dropdown menu for Tools with sub-buttons
+        tools_menu = QMenu('Tools', self)
+        dna_to_rna_action = QAction('DNA to RNA', self)
+        rna_to_dna_action = QAction('RNA to DNA', self)
+        dna_to_dnac_action = QAction('DNA to DNAc', self)
+        seq_find_action = QAction('Sequence find', self)
+        patern_frequence_action = QAction('Patern frequence', self)
+        prot_stats_action = QAction('Prot stats', self)
+        tools_menu.addAction(dna_to_rna_action)
+        tools_menu.addAction(rna_to_dna_action)
+        tools_menu.addAction(dna_to_dnac_action)
+        tools_menu.addAction(seq_find_action)
+        tools_menu.addAction(patern_frequence_action)
+        tools_menu.addAction(prot_stats_action)
+        tools_button = QPushButton('Tools')
+        tools_button.setMenu(tools_menu)
+        main_toolbar.addWidget(tools_button)
+
+        #Create Widget for Prot with sub-buttons
+        prot_menu = QMenu('Prot', self)
+        hydrophobicity = QAction('Hydrophobicity', self)
+        prot_menu.addAction(hydrophobicity)
+        isoelectric_point = QAction('Isoelectric Point', self)
+        prot_menu.addAction(isoelectric_point)
+        prot_button = QPushButton('Prot')
+        prot_button.setMenu(prot_menu)
+        main_toolbar.addWidget(prot_button)
+
+        #Create Widget for Gene with sub-buttons
+        gene_menu = QMenu('Gene', self)
+        gene_bank = QAction('Genbank Info', self)
+        gene_menu.addAction(gene_bank)
+        plasmid_editor = QAction('Plasmid Editor', self)
+        gene_menu.addAction(plasmid_editor)
+        gene_button = QPushButton('Gene')
+        gene_button.setMenu(gene_menu)
+        main_toolbar.addWidget(gene_button)
+
+        #Create Widget for Phylo with sub-buttons
+        phylo_menu = QMenu('Phylogeny', self)
+        one_click = QAction('One Click', self)
+        phylo_menu.addAction(one_click)
+        create_alignment = QAction('Create Alignment', self)
+        phylo_menu.addAction(create_alignment)
+        multiple_alignment = QAction('Multiple Alignment from File', self)
+        phylo_menu.addAction(multiple_alignment)
+        phylo_button = QPushButton('Phylogeny')
+        phylo_button.setMenu(phylo_menu)
+        main_toolbar.addWidget(phylo_button)
+
         # Create widget for text editor
         editor_widget = QWidget()
         editor_layout = QVBoxLayout()
