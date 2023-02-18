@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QMimeData
+from PyQt5.QtGui import QPixmap, QImage, QDrag, QTextImageFormat
 import sys
-from PyQt5.QtGui import QPixmap
+import os
 
 class TextEditor(QMainWindow):
     def __init__(self):
@@ -18,7 +19,7 @@ class TextEditor(QMainWindow):
         editor_widget = QWidget()
         editor_layout = QVBoxLayout()
 
-        # Create toolbar for text editor with buttons for File, Save, Font, and Close
+        # Create toolbar for text editor with buttons for File, Save, Font, Insert Image, and Close
         editor_toolbar = QToolBar()
         editor_toolbar.setObjectName("Editor Toolbar")
         editor_toolbar.setMovable(False) # Disable toolbar movement
@@ -27,16 +28,19 @@ class TextEditor(QMainWindow):
         file_button = QPushButton('File')
         save_button = QPushButton('Save')
         font_button = QPushButton('Font')
+        image_button = QPushButton('Insert Image')
 
         # Connect buttons to their respective functions
         file_button.clicked.connect(self.open_file)
         save_button.clicked.connect(self.save_file)
         font_button.clicked.connect(self.change_font)
+        image_button.clicked.connect(self.insert_image)
 
         # Add buttons to the text editor toolbar
         editor_toolbar.addWidget(file_button)
         editor_toolbar.addWidget(save_button)
         editor_toolbar.addWidget(font_button)
+        editor_toolbar.addWidget(image_button)
 
         # Create text edit widget
         self.text_edit = QTextEdit()
@@ -63,8 +67,8 @@ class TextEditor(QMainWindow):
         splitter_widget = QSplitter(Qt.Horizontal)
         splitter_widget.addWidget(triangle_widget)
         splitter_widget.addWidget(editor_widget)
-        splitter_widget.setHandleWidth(10)
-        splitter_widget.setStyleSheet("QSplitter::handle { background-color: gray; } QSplitter { background-color: lightgray; }")
+        splitter_widget.setHandleWidth(8)
+        splitter_widget.setStyleSheet("QSplitter::handle { background-color: gray; } ")
         splitter_widget.show()
 
         # Create a central widget to hold the splitter widget
@@ -80,10 +84,9 @@ class TextEditor(QMainWindow):
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
 
-
     def open_file(self):
-        # Open file dialog to select file
-        file_name, _ = QFileDialog.getOpenFileName(self, 'Open File', '', 'Text Files (*.txt);;All Files (*)')
+    # Open file dialog to select file
+        file_name, _ = QFileDialog.getOpenFileName(self, 'Open File', '', 'Rich Text Files (*.rtf *.docx);;Text Files (*.txt);;All Files (*)')
         print(file_name)  # Print the selected file name to the console
         if file_name:
             # Read file and set text in text edit widget
@@ -92,7 +95,7 @@ class TextEditor(QMainWindow):
 
     def save_file(self):
         # Open file dialog to select file to save to
-        file_name, _ = QFileDialog.getSaveFileName(self, 'Save File', '', 'Text Files (*.txt);;All Files (*)')
+        file_name, _ = QFileDialog.getSaveFileName(self, 'Save File', '', 'Rich Text Files (*.rtf *.docx);;Text Files (*.txt);;All Files (*)')
         if file_name:
             # Write text in text edit widget to file
             with open(file_name, 'w') as file:
@@ -111,6 +114,12 @@ class TextEditor(QMainWindow):
         self.findChild(QToolBar, "Editor Toolbar").show()
         # Show the splitter widget
         self.centralWidget().show()
+    def insert_image(self):
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+        if fileName:
+            imageFormat = QTextImageFormat()
+            imageFormat.setName(fileName)
+            self.text_edit.textCursor().insertImage(imageFormat)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
