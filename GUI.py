@@ -1,20 +1,22 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt, QMimeData
-from PyQt5.QtGui import QPixmap, QImage, QDrag, QTextImageFormat
+from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 import sys
 import os
 
 class TextEditor(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        font_id = QFontDatabase.addApplicationFont("font.ttf")
+        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        font = QFont(font_family, 10)
+        QApplication.setFont(font)
         # Create main toolbar with buttons A, B, C, and Text Editor
         main_toolbar = self.addToolBar('Main Toolbar')
         main_toolbar.setMovable(False) # Disable toolbar movement
         main_toolbar.addAction('A')
         main_toolbar.addAction('B')
         main_toolbar.addAction('C')
-
         # Create widget for text editor
         editor_widget = QWidget()
         editor_layout = QVBoxLayout()
