@@ -1,4 +1,7 @@
-sequence_AA = "KVFGRCELAAAMKRHGLDNYRGYSLGNWVCAAKFESNFNTQATNRNTDGSTDYGILQINSRWWCNDGRTPGSRNLCNIPCSALLSSDITASVNCAKKIVSDGNGMNAWVAWRNRCKGTDVQAWIRGCRL"
+sequence_AA = "KKKKKKKKKKKKKKKKKKKKKKKKKKKKK"
+sequence_lyzozymepoulet = "KVFGRCELAAAMKRHGLDNYRGYSLGNWVCAAKFESNFNTQATNRNTDGSTDYGILQINSRWWCNDGRTPGSRNLCNIPCSALLSSDITASVNCAKKIVSDGNGMNAWVAWRNRCKGTDVQAWIRGCRL"
+
+
 
 def calc_hydrophobicity(sequence):
     # Define hydrophobicity values for individual amino acids
@@ -30,8 +33,6 @@ def calc_hydrophobicity(sequence):
         if aa in hydrophobicity_values:
             hydrophobicity += hydrophobicity_values[aa]
     return hydrophobicity
-
-print("L'hydrophobicité est de", calc_hydrophobicity(sequence_AA))
 
 frequency = "att"
 string = "attgttgattgccgtattgatt"
@@ -110,4 +111,84 @@ def calc_pI(sequence):
 
     return (a + b) / 2
 
-print("Le point isoélectrique est d'environ", calc_pI(sequence_AA), ", ce résultat peut varier en fonction des conditions environnementales")
+
+def calculate_thermal_stability(sequence):
+    # Initialize the thermal stability to zero
+    stability = 0.0
+    
+    # Runs through each amino acid in the sequence
+    for aa in sequence:
+    # Adds amino acid dependent stability value to total stability (empirical and arbitrary weights, and not depending of the temperature)
+        if aa == 'A':
+            stability += 0.5
+        elif aa == 'C':
+            stability += 0.3
+        elif aa == 'D':
+            stability -= 0.8
+        elif aa == 'E':
+            stability -= 0.7
+        elif aa == 'F':
+            stability += 1.2
+        elif aa == 'G':
+            stability += 0.0
+        elif aa == 'H':
+            stability += 0.5
+        elif aa == 'I':
+            stability += 1.0
+        elif aa == 'K':
+            stability -= 1.5
+        elif aa == 'L':
+            stability += 1.0
+        elif aa == 'M':
+            stability += 0.6
+        elif aa == 'N':
+            stability -= 0.5
+        elif aa == 'P':
+            stability -= 0.3
+        elif aa == 'Q':
+            stability -= 0.7
+        elif aa == 'R':
+            stability -= 2.5
+        elif aa == 'S':
+            stability -= 0.1
+        elif aa == 'T':
+            stability += 0.4
+        elif aa == 'V':
+            stability += 0.7
+        elif aa == 'W':
+            stability += 1.3
+        elif aa == 'Y':
+            stability += 0.9
+        elif aa == 'U':
+            stability += 0.2  # Sélénocystéine
+        elif aa == 'O':
+            stability += 0.0  # Pyrrolysine
+    
+    # Return the total thermal stability
+    return stability
+
+print("Le point isoélectrique est d'environ", calc_pI(sequence_AA), ", ce résultat peut varier en fonction des conditions environnementales.", "\nL'Hydrophbicité de la protéine est d'environ", calc_hydrophobicity(sequence_AA), "\nLa stabilité thermique est d'environ", calculate_thermal_stability(sequence_AA))
+
+
+"""Dans la fonction que j'ai codée précédemment, je n'ai pas spécifié de température particulière à laquelle la stabilité thermique doit être 
+calculée. La stabilité thermique est une propriété physique qui dépend de la température à laquelle la protéine est exposée. 
+En général, la stabilité thermique est mesurée à une température de 25°C ou de 37°C, qui sont des températures couramment utilisées pour 
+les expériences de biologie moléculaire. Cependant, la stabilité thermique peut varier en fonction de la température, et certaines protéines 
+peuvent être plus stables ou moins stables à des températures différentes.
+
+Il est important de noter que dans la fonction que j'ai codée, les valeurs de stabilité que j'ai utilisées pour 
+chaque acide aminé sont des valeurs arbitraires qui ne sont pas basées sur des mesures expérimentales précises. Ces valeurs ont été choisies à 
+titre d'exemple pour illustrer le principe général de la fonction. En pratique, les valeurs de stabilité dépendent des propriétés 
+physico-chimiques de chaque acide aminé et sont souvent déterminées expérimentalement à l'aide de techniques telles que la calorimétrie 
+à haute précision ou la spectroscopie de fluorescence."""
+
+"""La stabilité thermique d'une protéine est une mesure de sa capacité à maintenir sa structure tridimensionnelle à une température donnée. 
+Une valeur de stabilité thermique positive indique que la protéine est stable à cette température, c'est-à-dire qu'elle conserve sa structure 
+tridimensionnelle. À l'inverse, une valeur de stabilité thermique négative indique que la protéine est instable à cette température, c'est-à-dire 
+qu'elle risque de se dénaturer et de perdre sa structure tridimensionnelle.
+
+Dans le contexte de la fonction que nous avons codée, une stabilité thermique positive signifie que la protéine codée par la séquence d'acides
+aminés en entrée est stable à une température donnée, tandis qu'une stabilité thermique négative indique qu'elle est instable. Cependant, il est 
+important de noter que les valeurs de stabilité calculées par cette fonction sont des valeurs arbitraires que j'ai choisies à titre d'exemple et 
+que la stabilité thermique réelle d'une protéine dépend de nombreux facteurs, tels que sa séquence d'acides aminés, sa structure 
+tridimensionnelle, sa composition en acides aminés, son environnement, etc."""
