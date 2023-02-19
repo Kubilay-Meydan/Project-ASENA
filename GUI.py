@@ -150,6 +150,7 @@ class TextEditor(QMainWindow):
 
         central_layout.addWidget(splitter_widget)
         central_widget.setLayout(central_layout)
+        splitter_widget.moveSplitter(1,0)
 
         self.setCentralWidget(central_widget)
 
