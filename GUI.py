@@ -45,7 +45,7 @@ class TextEditor(QMainWindow):
         dna_to_dnac_action = QAction('DNA to DNAc', self)
         seq_find_action = QAction('Sequence find', self)
         patern_frequence_action = QAction('Patern frequence', self)
-        prot_stats_action = QAction('Prot stats', self)
+        prot_stats_action = QAction('Protein statistics', self)
         tools_menu.addAction(dna_to_rna_action)
         tools_menu.addAction(rna_to_dna_action)
         tools_menu.addAction(dna_to_dnac_action)
@@ -58,10 +58,10 @@ class TextEditor(QMainWindow):
 
         #Create Widget for Prot with sub-buttons
         prot_menu = QMenu('Prot', self)
-        hydrophobicity = QAction('Hydrophobicity', self)
-        prot_menu.addAction(hydrophobicity)
-        isoelectric_point = QAction('Isoelectric Point', self)
-        prot_menu.addAction(isoelectric_point)
+        blast = QAction('Blast', self)
+        prot_menu.addAction(blast)
+        uni_prot = QAction('UniProt', self)
+        prot_menu.addAction(uni_prot)
         prot_button = QPushButton('Prot')
         prot_button.setMenu(prot_menu)
         main_toolbar.addWidget(prot_button)
