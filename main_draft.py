@@ -11,6 +11,7 @@ from IPython.display import display
 import sys
 import os
 import ipywidgets as widgets
+import ipyfilechooser as filechooser
 from IPython.display import display, clear_output
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -315,42 +316,25 @@ class TextEditor(QMainWindow):
     def open_file(self):
     # Open file dialog to select file
         file_name, _ = QFileDialog.getOpenFileName(self, 'Open File', '', 'Rich Text Files (*.rtf *.docx);;Text Files (*.txt);;All Files (*)')
-        print(file_name)  # Print the selected file name to the console
+          # Print the selected file name to the console
         if file_name:
             # Read file and set text in text edit widget
             with open(file_name, 'r') as file:
                 self.text_edit.setPlainText(file.read())
-    def one_click(self):
-        # create a file selector widget
-        file_selector = widgets.FileUpload(accept='.fasta', multiple=False)
-        display(file_selector)
-        # create a "Run" button
-        run_button = widgets.Button(description='Run')
-
-        # define a callback function for the "Run" button
-        def on_run_button_clicked(button):
-            # get the input file from the file selector
-            input_file = list(file_selector.value.keys())[0]
-            file_contents = file_selector.value[input_file]['content']
-            with open(input_file, 'wb') as f:
-                f.write(file_contents)
-
-            # make the phylogenetic tree
-            Align_muscle(input_file, 'aligned')
-            fig = make_phylogenetic_tree_bof('aligned')
-            # create a matplotlib figure canvas
-            canvas = FigureCanvasAgg(fig)
-            # create a widget box to hold the canvas and add it to the app
-            canvas_widget = widgets.Output()
-            with canvas_widget:
-                display(canvas)
-            box = widgets.Box(children=[canvas_widget])
-            display(box)
-
-        # register the callback function for the "Run" button
-        run_button.on_click(on_run_button_clicked)
-        display(run_button)
+    def one_click(button):
         
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        # Get the path to the selected file
+        Align_muscle(file_path, 'aligned')
+        fig = make_phylogenetic_tree_bof('aligned')
+        # create a matplotlib figure canvas
+        canvas = FigureCanvasAgg(fig)
+        # create a widget box to hold the canvas and add it to the app
+        canvas_widget = widgets.Output()
+        with canvas_widget:
+            display(canvas)
+        box = widgets.Box(children=[canvas_widget])
+        display(box)
 
     def save_file(self):
         # Open file dialog to select file to save to
