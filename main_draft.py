@@ -325,6 +325,8 @@ class TextEditor(QMainWindow):
         
         file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
         # Get the path to the selected file
+        if file_path == '':
+            return "no file selected"
         Align_muscle(file_path, 'aligned')
         fig = make_phylogenetic_tree_bof('aligned')
         # create a matplotlib figure canvas
