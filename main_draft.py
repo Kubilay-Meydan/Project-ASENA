@@ -1,10 +1,11 @@
 from Bio import Entrez, SeqIO
+from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import Box, widgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
+from PyQt5.QtWidgets import QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 from IPython.display import display
@@ -155,6 +156,38 @@ gene_id = 'L15440.1'
 #   Makes a simple Phylo tree, no bootstrap yet
 #make_phylogenetic_tree_bof('aligned')
 
+def display_protein_stats():
+    # Open a dialog window to get user input
+    seq, ok_pressed = QInputDialog.getText(None, "Protein Statistics", "Enter protein sequence:")
+
+    # Only continue if the user clicked OK
+    if ok_pressed:
+        # Calculate protein statistics
+        protein_analysis = ProteinAnalysis(seq)
+        stats = {
+            "Molecular weight": protein_analysis.molecular_weight(),
+            "Aromaticity": protein_analysis.aromaticity(),
+            "Instability index": protein_analysis.instability_index(),
+            "Isoelectric point": protein_analysis.isoelectric_point(),
+            "Secondary structure fraction": protein_analysis.secondary_structure_fraction(),
+        }
+
+        # Display protein statistics in a new window
+        stats_window = QDialog()
+        stats_layout = QVBoxLayout()
+
+        for stat, value in stats.items():
+            label = QLabel(f"{stat}: {value}")
+            stats_layout.addWidget(label)
+
+        close_button = QPushButton("Fermer")
+        close_button.clicked.connect(stats_window.close)
+        stats_layout.addWidget(close_button)
+
+        stats_window.setLayout(stats_layout)
+        stats_window.setWindowTitle("Protein Statistics")
+        stats_window.exec_()
+
 class TextEditor(QMainWindow):
     # Get the current working directory
     def __init__(self):
@@ -185,7 +218,6 @@ class TextEditor(QMainWindow):
         file_button = QPushButton('File')
         file_button.setMenu(file_menu)
         main_toolbar.addWidget(file_button)
-        
         # Connect buttons to their respective functions
         new_action.triggered.connect(self.new_file)
         open_action.triggered.connect(lambda: self.open_save_file_dialog('Open File', 'r'))
@@ -208,6 +240,7 @@ class TextEditor(QMainWindow):
         tools_button = QPushButton('Tools')
         tools_button.setMenu(tools_menu)
         main_toolbar.addWidget(tools_button)
+        prot_stats_action.triggered.connect(display_protein_stats)
 
         #Create Widget for Prot with sub-buttons
         prot_menu = QMenu('Prot', self)
