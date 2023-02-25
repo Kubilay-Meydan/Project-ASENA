@@ -1,4 +1,3 @@
-#possible problème avec .exe
 from Bio import Entrez, SeqIO
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from Bio import AlignIO, Phylo
@@ -115,7 +114,7 @@ def make_phylogenetic_tree_bof(alignment_file):
     # Draw and show the tree
     Phylo.draw(tree)
 
-
+'''
 
 
 # List of protein accession numbers
@@ -146,7 +145,7 @@ Align_muscle('output.fasta','aligned')
 make_phylogenetic_tree_bof('aligned')
 
 
-'''
+
 Bootsrap???
 
 

@@ -183,11 +183,11 @@ def display_protein_stats():
         stats = {
             "Molecular weight": f"{protein_analysis.molecular_weight():.2f} Da",
             "Aromaticity": f"{protein_analysis.aromaticity():.2f}",
-            "Instability index": f"{protein_analysis.instability_index():.2f}",
-            "Isoelectric point": f"{protein_analysis.isoelectric_point():.2f}",
-            "Secondary structure fraction (helix)": f"{sec_struct[0]:.2f}",
-            "Secondary structure fraction (sheet)": f"{sec_struct[1]:.2f}",
-            "Secondary structure fraction (coil)": f"{sec_struct[2]:.2f}"
+            "Instability index (%)": f"{protein_analysis.instability_index():.2f}",
+            "Isoelectric point (pH)": f"{protein_analysis.isoelectric_point():.2f}",
+            "Secondary structure fraction (%) (helix)": f"{sec_struct[0]:.2f}",
+            "Secondary structure fraction  (%) (sheet)": f"{sec_struct[1]:.2f}",
+            "Secondary structure fraction (%) (coil)": f"{sec_struct[2]:.2f}"
         }
 
         # Display protein statistics in a new window
@@ -198,13 +198,14 @@ def display_protein_stats():
             label = QLabel(f"{stat}: {value}")
             stats_layout.addWidget(label)
 
-        close_button = QPushButton("Fermer")
+        close_button = QPushButton("Close")
         close_button.clicked.connect(stats_window.close)
         stats_layout.addWidget(close_button)
 
         stats_window.setLayout(stats_layout)
         stats_window.setWindowTitle("Protein Statistics")
         stats_window.exec_()
+
 class TextEditor(QMainWindow):
     # Get the current working directory
     def __init__(self):
