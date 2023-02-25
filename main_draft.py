@@ -5,7 +5,7 @@ from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import Box, widgets
-from PyQt5.QtWidgets import QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
+from PyQt5.QtWidgets import QInputDialog, QMessageBox, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 from IPython.display import display
@@ -156,20 +156,38 @@ gene_id = 'L15440.1'
 #   Makes a simple Phylo tree, no bootstrap yet
 #make_phylogenetic_tree_bof('aligned')
 
+
+def is_valid_sequence(seq):
+    amino_acids = set("ACDEFGHIKLMNPQRSTVWYOU")
+    return all(aa in amino_acids for aa in seq)
+
 def display_protein_stats():
     # Open a dialog window to get user input
     seq, ok_pressed = QInputDialog.getText(None, "Protein Statistics", "Enter protein sequence:")
 
     # Only continue if the user clicked OK
     if ok_pressed:
+        # Check if the input sequence is valid
+        if not is_valid_sequence(seq):
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Invalid sequence")
+            msg.setInformativeText("The sequence you entered contains invalid characters. Please enter a valid protein sequence.")
+            msg.setWindowTitle("Error")
+            msg.exec_()
+            return
+
         # Calculate protein statistics
         protein_analysis = ProteinAnalysis(seq)
+        sec_struct = protein_analysis.secondary_structure_fraction()
         stats = {
-            "Molecular weight": protein_analysis.molecular_weight(),
-            "Aromaticity": protein_analysis.aromaticity(),
-            "Instability index": protein_analysis.instability_index(),
-            "Isoelectric point": protein_analysis.isoelectric_point(),
-            "Secondary structure fraction": protein_analysis.secondary_structure_fraction(),
+            "Molecular weight": f"{protein_analysis.molecular_weight():.2f} Da",
+            "Aromaticity": f"{protein_analysis.aromaticity():.2f}",
+            "Instability index": f"{protein_analysis.instability_index():.2f}",
+            "Isoelectric point": f"{protein_analysis.isoelectric_point():.2f}",
+            "Secondary structure fraction (helix)": f"{sec_struct[0]:.2f}",
+            "Secondary structure fraction (sheet)": f"{sec_struct[1]:.2f}",
+            "Secondary structure fraction (coil)": f"{sec_struct[2]:.2f}"
         }
 
         # Display protein statistics in a new window
@@ -187,7 +205,6 @@ def display_protein_stats():
         stats_window.setLayout(stats_layout)
         stats_window.setWindowTitle("Protein Statistics")
         stats_window.exec_()
-
 class TextEditor(QMainWindow):
     # Get the current working directory
     def __init__(self):
