@@ -13,9 +13,11 @@ import sys
 import os
 import ipywidgets as widgets
 import ipyfilechooser as filechooser
-from IPython.display import display, clear_output
+from IPython.display import display, FileLinks
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-
+from py4j.java_gateway import JavaGateway
+import os
+import requests
 entry = ''
 def DNA_to_RNA(entry):
     ans = ''
@@ -104,7 +106,6 @@ def write_fasta(sequences, names):
             fasta.write(seq + "\n")
 
 
-
 def Align_muscle(sequences,output):
 # Align the sequences using muscle
     muscle_exe = "muscle.exe"
@@ -165,11 +166,11 @@ def display_protein_stats():
         # Calculate protein statistics
         protein_analysis = ProteinAnalysis(seq)
         stats = {
-            "Molecular weight": protein_analysis.molecular_weight(),
+            "Molecular weight (grams per mole)": protein_analysis.molecular_weight(),
             "Aromaticity": protein_analysis.aromaticity(),
-            "Instability index": protein_analysis.instability_index(),
-            "Isoelectric point": protein_analysis.isoelectric_point(),
-            "Secondary structure fraction": protein_analysis.secondary_structure_fraction(),
+            "Instability index (%)": protein_analysis.instability_index(),
+            "Isoelectric point (pH)": protein_analysis.isoelectric_point(),
+            "Secondary structure fraction (%)": protein_analysis.secondary_structure_fraction(),
         }
 
         # Display protein statistics in a new window
@@ -180,7 +181,7 @@ def display_protein_stats():
             label = QLabel(f"{stat}: {value}")
             stats_layout.addWidget(label)
 
-        close_button = QPushButton("Fermer")
+        close_button = QPushButton("Close")
         close_button.clicked.connect(stats_window.close)
         stats_layout.addWidget(close_button)
 
@@ -240,6 +241,8 @@ class TextEditor(QMainWindow):
         tools_button = QPushButton('Tools')
         tools_button.setMenu(tools_menu)
         main_toolbar.addWidget(tools_button)
+
+
         prot_stats_action.triggered.connect(display_protein_stats)
 
         #Create Widget for Prot with sub-buttons
@@ -273,7 +276,11 @@ class TextEditor(QMainWindow):
         phylo_button = QPushButton('Phylogeny')
         phylo_button.setMenu(phylo_menu)
         main_toolbar.addWidget(phylo_button)
+
+        #connect button
         one_click.triggered.connect(self.one_click)
+        create_alignment.triggered.connect(self.create_alignement)
+        
         # Create widget for text editor
         editor_widget = QWidget()
         editor_layout = QVBoxLayout()
@@ -289,6 +296,8 @@ class TextEditor(QMainWindow):
         font_button = QPushButton('Font')
         image_button = QPushButton('Insert Image')
         one_click_button = QPushButton('One_click')
+        create_alignment = QPushButton('Create_Alignment')
+
 
         # Connect buttons to their respective functions
         file_button.clicked.connect(self.open_file)
@@ -296,6 +305,7 @@ class TextEditor(QMainWindow):
         font_button.clicked.connect(self.change_font)
         image_button.clicked.connect(self.insert_image)
         one_click_button.clicked.connect(self.one_click)
+        create_alignment.clicked.connect(self.create_alignement)
 
         # Add buttons to the text editor toolbar
         editor_toolbar.addWidget(file_button)
@@ -345,6 +355,35 @@ class TextEditor(QMainWindow):
         # Set window title and dimensions
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
+    
+        
+    def create_alignement(button):
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        Align_muscle(file_path, 'aligned')
+        # Create a new widget for displaying the text
+        widget = QWidget()
+
+        # Create a layout for the widget
+        layout = QVBoxLayout()
+
+        # Create a text edit widget for displaying the text file contents
+        text_edit = QTextEdit()
+
+        # Open the text file and read its contents
+        with open(file_path, 'r') as file:
+            file_contents = file.read()
+
+        # Set the text edit widget's contents to the text file contents
+        text_edit.setPlainText(file_contents)
+
+        # Add the text edit widget to the layout
+        layout.addWidget(text_edit)
+
+        # Set the widget's layout
+        widget.setLayout(layout)
+
+        # Show the widget
+        widget.show()
 
     def open_file(self):
     # Open file dialog to select file
@@ -354,8 +393,8 @@ class TextEditor(QMainWindow):
             # Read file and set text in text edit widget
             with open(file_name, 'r') as file:
                 self.text_edit.setPlainText(file.read())
-    def one_click(button):
-        
+    
+    def one_click(button):   
         file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
         # Get the path to the selected file
         if file_path == '':
