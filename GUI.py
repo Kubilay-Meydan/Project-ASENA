@@ -1,11 +1,62 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
+from Bio import Entrez, SeqIO
+from Bio.SeqUtils.ProtParam import ProteinAnalysis
+from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
+from Bio import AlignIO, Phylo
+from Bio.Align.Applications import MuscleCommandline
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from ipywidgets import Box, widgets
+from PyQt5.QtWidgets import QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
+from IPython.display import display
 import sys
 import os
+import ipywidgets as widgets
+import ipyfilechooser as filechooser
+from IPython.display import display, FileLinks
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from py4j.java_gateway import JavaGateway
+import os
+import requests
+from main import *
+
+def display_protein_stats():
+    # Open a dialog window to get user input
+    seq, ok_pressed = QInputDialog.getText(None, "Protein Statistics", "Enter protein sequence:")
+
+    # Only continue if the user clicked OK
+    if ok_pressed:
+        # Calculate protein statistics
+        protein_analysis = ProteinAnalysis(seq)
+        stats = {
+            "Molecular weight (grams per mole)": protein_analysis.molecular_weight(),
+            "Aromaticity": protein_analysis.aromaticity(),
+            "Instability index (%)": protein_analysis.instability_index(),
+            "Isoelectric point (pH)": protein_analysis.isoelectric_point(),
+            "Secondary structure fraction (%)": protein_analysis.secondary_structure_fraction(),
+        }
+
+        # Display protein statistics in a new window
+        stats_window = QDialog()
+        stats_layout = QVBoxLayout()
+
+        for stat, value in stats.items():
+            label = QLabel(f"{stat}: {value}")
+            stats_layout.addWidget(label)
+
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(stats_window.close)
+        stats_layout.addWidget(close_button)
+
+        stats_window.setLayout(stats_layout)
+        stats_window.setWindowTitle("Protein Statistics")
+        stats_window.exec_()
 
 class TextEditor(QMainWindow):
+    # Get the current working directory
     def __init__(self):
+        current_dir = os.getcwd()
+        print(current_dir)
         super().__init__()
         font_id = QFontDatabase.addApplicationFont("font.ttf")
         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
@@ -31,13 +82,11 @@ class TextEditor(QMainWindow):
         file_button = QPushButton('File')
         file_button.setMenu(file_menu)
         main_toolbar.addWidget(file_button)
-        
         # Connect buttons to their respective functions
         new_action.triggered.connect(self.new_file)
         open_action.triggered.connect(lambda: self.open_save_file_dialog('Open File', 'r'))
         save_action.triggered.connect(lambda: self.open_save_file_dialog('Save File', 'w'))
         save_as_action.triggered.connect(lambda: self.open_save_file_dialog('Save File As', 'w'))
-
         # Create dropdown menu for Tools with sub-buttons
         tools_menu = QMenu('Tools', self)
         dna_to_rna_action = QAction('DNA to RNA', self)
@@ -55,6 +104,9 @@ class TextEditor(QMainWindow):
         tools_button = QPushButton('Tools')
         tools_button.setMenu(tools_menu)
         main_toolbar.addWidget(tools_button)
+
+
+        prot_stats_action.triggered.connect(display_protein_stats)
 
         #Create Widget for Prot with sub-buttons
         prot_menu = QMenu('Prot', self)
@@ -88,6 +140,10 @@ class TextEditor(QMainWindow):
         phylo_button.setMenu(phylo_menu)
         main_toolbar.addWidget(phylo_button)
 
+        #connect button
+        one_click.triggered.connect(self.one_click)
+        create_alignment.triggered.connect(self.create_alignement)
+        
         # Create widget for text editor
         editor_widget = QWidget()
         editor_layout = QVBoxLayout()
@@ -102,12 +158,17 @@ class TextEditor(QMainWindow):
         save_button = QPushButton('Save')
         font_button = QPushButton('Font')
         image_button = QPushButton('Insert Image')
+        one_click_button = QPushButton('One_click')
+        create_alignment = QPushButton('Create_Alignment')
+
 
         # Connect buttons to their respective functions
         file_button.clicked.connect(self.open_file)
         save_button.clicked.connect(self.save_file)
         font_button.clicked.connect(self.change_font)
         image_button.clicked.connect(self.insert_image)
+        one_click_button.clicked.connect(self.one_click)
+        create_alignment.clicked.connect(self.create_alignement)
 
         # Add buttons to the text editor toolbar
         editor_toolbar.addWidget(file_button)
@@ -157,15 +218,60 @@ class TextEditor(QMainWindow):
         # Set window title and dimensions
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
+    
+        
+    def create_alignement(button):
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        Align_muscle(file_path, 'aligned')
+        # Create a new widget for displaying the text
+        widget = QWidget()
+
+        # Create a layout for the widget
+        layout = QVBoxLayout()
+
+        # Create a text edit widget for displaying the text file contents
+        text_edit = QTextEdit()
+
+        # Open the text file and read its contents
+        with open(file_path, 'r') as file:
+            file_contents = file.read()
+
+        # Set the text edit widget's contents to the text file contents
+        text_edit.setPlainText(file_contents)
+
+        # Add the text edit widget to the layout
+        layout.addWidget(text_edit)
+
+        # Set the widget's layout
+        widget.setLayout(layout)
+
+        # Show the widget
+        widget.show()
 
     def open_file(self):
     # Open file dialog to select file
         file_name, _ = QFileDialog.getOpenFileName(self, 'Open File', '', 'Rich Text Files (*.rtf *.docx);;Text Files (*.txt);;All Files (*)')
-        print(file_name)  # Print the selected file name to the console
+          # Print the selected file name to the console
         if file_name:
             # Read file and set text in text edit widget
             with open(file_name, 'r') as file:
                 self.text_edit.setPlainText(file.read())
+    
+    def one_click(button):   
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        # Get the path to the selected file
+        if file_path == '':
+            return "no file selected"
+        Align_muscle(file_path, 'aligned')
+        fig = make_phylogenetic_tree_bof('aligned')
+        # create a matplotlib figure canvas
+        canvas = FigureCanvasAgg(fig)
+        # create a widget box to hold the canvas and add it to the app
+        canvas_widget = widgets.Output()
+        with canvas_widget:
+            display(canvas)
+        box = widgets.Box(children=[canvas_widget])
+        display(box)
 
     def save_file(self):
         # Open file dialog to select file to save to
@@ -195,8 +301,31 @@ class TextEditor(QMainWindow):
             imageFormat.setName(fileName)
             self.text_edit.textCursor().insertImage(imageFormat)
 
-if __name__ == '__main__':
+def run_gui():
     app = QApplication(sys.argv)
     editor = TextEditor()
     editor.show()
     sys.exit(app.exec_())
+run_gui()
+'''
+from Bio import AlignIO
+from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
+from Bio.Phylo.Consensus import bootstrap_consensus
+import matplotlib.pyplot as plt
+from Bio import Phylo
+def make_phylogenetic_tree_bof(alignment_file, bootstraps=100):
+    # Load the multiple sequence alignment from file
+    alignment = AlignIO.read(alignment_file, "clustal")
+    # Calculate the pairwise distances between sequences
+    calculator = DistanceCalculator('identity')
+    dm = calculator.get_distance(alignment)
+    # Construct the phylogenetic tree using the UPGMA method
+    constructor = DistanceTreeConstructor(calculator, 'upgma')
+    tree = constructor.build_tree(alignment)
+    # Perform bootstrapping to estimate the confidence in the branches of the tree
+    bootstrapped_trees = bootstrap_consensus(alignment_file, bootstraps,tree, 'strict_consensus')
+    # Draw and show the tree
+    Phylo.draw(bootstrapped_trees)
+    plt.show()
+make_phylogenetic_tree_bof('aligned')
+'''
