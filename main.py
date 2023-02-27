@@ -20,7 +20,7 @@ def DNA_to_RNA(entry):
 Entrez.email = "your@email.com"  # replace with your email address
 
 def get_genbank_info(gene_id):
-    with open(str(gene_id)+'.txt', 'w') as f:
+    with open(str(gene_id), 'w') as f:
         handle = Entrez.efetch(db="nucleotide", id=gene_id, rettype="gb", retmode="text")
         record = SeqIO.read(handle, "genbank")
         cds_sequence = []

@@ -5,7 +5,7 @@ from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import Box, widgets
-from PyQt5.QtWidgets import QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
+from PyQt5.QtWidgets import QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 from IPython.display import display
@@ -16,7 +16,6 @@ import ipyfilechooser as filechooser
 from IPython.display import display, FileLinks
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from py4j.java_gateway import JavaGateway
-import os
 import requests
 from main import *
 
@@ -144,7 +143,7 @@ class TextEditor(QMainWindow):
         one_click.triggered.connect(self.one_click)
         create_alignment.triggered.connect(self.create_alignement)
         multiple_alignment.triggered.connect(self.from_alignement)
-        
+        gene_bank.triggered.connect(self.gene_bank)
         # Create widget for text editor
         editor_widget = QWidget()
         editor_layout = QVBoxLayout()
@@ -162,6 +161,7 @@ class TextEditor(QMainWindow):
         one_click_button = QPushButton('One_click')
         create_alignment = QPushButton('Create_Alignment')
         multiple_alignment = QPushButton('From Alignement File')
+        gene_bank = QPushButton("get genebank info")
 
         # Connect buttons to their respective functions
         file_button.clicked.connect(self.open_file)
@@ -171,6 +171,7 @@ class TextEditor(QMainWindow):
         one_click_button.clicked.connect(self.one_click)
         create_alignment.clicked.connect(self.create_alignement)
         multiple_alignment.clicked.connect(self.from_alignement)
+        gene_bank.clicked.connect(self.gene_bank)
 
         # Add buttons to the text editor toolbar
         editor_toolbar.addWidget(file_button)
@@ -220,7 +221,35 @@ class TextEditor(QMainWindow):
         # Set window title and dimensions
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
-    
+
+    def gene_bank(button):
+        seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Gene Id:")
+        if ok_pressed:
+            # get data
+            protein_analysis = get_genbank_info(seq)
+        with open(str(seq), "r") as f:
+            aligned_text = f.read()
+
+        # Create a new window to display the aligned text
+        aligned_window = QDialog(button)
+        aligned_layout = QVBoxLayout()
+
+        # Create a text edit widget and add the aligned text to it
+        aligned_edit = QTextEdit()
+        aligned_edit.setPlainText(aligned_text)
+        aligned_edit.setReadOnly(True)
+        aligned_layout.addWidget(aligned_edit)
+
+        # Add a close button to the layout
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(aligned_window.close)
+        aligned_layout.addWidget(close_button)
+
+        # Set the layout of the window and show it
+        aligned_window.setLayout(aligned_layout)
+        aligned_window.setWindowTitle("Genbank Info")
+        aligned_window.exec_()
+        
     def from_alignement(self):
         file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
         # Get the path to the selected file
