@@ -115,8 +115,6 @@ def make_phylogenetic_tree_bof(alignment_file):
     Phylo.draw(tree)
 
 '''
-
-
 # List of protein accession numbers
 accessions = ['P66928','P14949','P10599','P34723','P0A4L3','P0AA25','P08629','P10639','P42115']
 # List of protein names 
@@ -128,7 +126,7 @@ names = ['THIO_HELPY', 'THIO_BACSU', 'THIO_HUMAN', 'THIO_PENCH', 'THIO_LISMO','T
 #
 
 gene_id = 'L15440.1'
-get_genbank_info(gene_id)
+#get_genbank_info(gene_id)
 
 #
 #       Makes Phylo tree from accession:

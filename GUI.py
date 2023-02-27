@@ -144,6 +144,8 @@ class TextEditor(QMainWindow):
         create_alignment.triggered.connect(self.create_alignement)
         multiple_alignment.triggered.connect(self.from_alignement)
         gene_bank.triggered.connect(self.gene_bank)
+        uni_prot.triggered.connect(self.uniprot)
+
         # Create widget for text editor
         editor_widget = QWidget()
         editor_layout = QVBoxLayout()
@@ -162,6 +164,7 @@ class TextEditor(QMainWindow):
         create_alignment = QPushButton('Create_Alignment')
         multiple_alignment = QPushButton('From Alignement File')
         gene_bank = QPushButton("get genebank info")
+        uni_prot = QPushButton("get prot sequences")
 
         # Connect buttons to their respective functions
         file_button.clicked.connect(self.open_file)
@@ -172,6 +175,8 @@ class TextEditor(QMainWindow):
         create_alignment.clicked.connect(self.create_alignement)
         multiple_alignment.clicked.connect(self.from_alignement)
         gene_bank.clicked.connect(self.gene_bank)
+        uni_prot.clicked.connect(self.uniprot)
+
 
         # Add buttons to the text editor toolbar
         editor_toolbar.addWidget(file_button)
@@ -222,6 +227,33 @@ class TextEditor(QMainWindow):
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
 
+    def uniprot(button):
+        seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Uniprot Id:")
+        if ok_pressed:
+            # get data
+            protein_analysis = get_sequence(seq)
+        with open(str(seq), "r") as f:
+            aligned_text = f.read()
+            
+        # Create a new window to display the aligned text
+        aligned_window = QDialog(button)
+        aligned_layout = QVBoxLayout()
+
+        # Create a text edit widget and add the aligned text to it
+        aligned_edit = QTextEdit()
+        aligned_edit.setPlainText(aligned_text)
+        aligned_edit.setReadOnly(True)
+        aligned_layout.addWidget(aligned_edit)
+
+        # Add a close button to the layout
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(aligned_window.close)
+        aligned_layout.addWidget(close_button)
+
+        # Set the layout of the window and show it
+        aligned_window.setLayout(aligned_layout)
+        aligned_window.setWindowTitle("Genbank Info")
+        aligned_window.exec_()
     def gene_bank(button):
         seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Gene Id:")
         if ok_pressed:
