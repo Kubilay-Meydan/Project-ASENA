@@ -223,30 +223,28 @@ class TextEditor(QMainWindow):
     def create_alignement(button):
         file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
         Align_muscle(file_path, 'aligned')
-        # Create a new widget for displaying the text
-        widget = QWidget()
+        with open('aligned', "r") as f:
+            aligned_text = f.read()
 
-        # Create a layout for the widget
-        layout = QVBoxLayout()
+        # Create a new window to display the aligned text
+        aligned_window = QDialog(button)
+        aligned_layout = QVBoxLayout()
 
-        # Create a text edit widget for displaying the text file contents
-        text_edit = QTextEdit()
+        # Create a text edit widget and add the aligned text to it
+        aligned_edit = QTextEdit()
+        aligned_edit.setPlainText(aligned_text)
+        aligned_edit.setReadOnly(True)
+        aligned_layout.addWidget(aligned_edit)
 
-        # Open the text file and read its contents
-        with open(file_path, 'r') as file:
-            file_contents = file.read()
+        # Add a close button to the layout
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(aligned_window.close)
+        aligned_layout.addWidget(close_button)
 
-        # Set the text edit widget's contents to the text file contents
-        text_edit.setPlainText(file_contents)
-
-        # Add the text edit widget to the layout
-        layout.addWidget(text_edit)
-
-        # Set the widget's layout
-        widget.setLayout(layout)
-
-        # Show the widget
-        widget.show()
+        # Set the layout of the window and show it
+        aligned_window.setLayout(aligned_layout)
+        aligned_window.setWindowTitle("Aligned Text")
+        aligned_window.exec_()
 
     def open_file(self):
     # Open file dialog to select file
