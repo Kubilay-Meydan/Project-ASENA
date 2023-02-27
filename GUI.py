@@ -228,7 +228,6 @@ class TextEditor(QMainWindow):
         self.showMaximized()  # Set the window to take up the full screen on first open
 
     def uniprot(button):
-        global acc
         # Create a QDialog with two input fields
         dialog = QDialog()
         dialog.setWindowTitle("get fasta")
@@ -252,38 +251,40 @@ class TextEditor(QMainWindow):
             acc = seq_input.text().split(",")
             names = names_input.text().split(",")
             dialog.close()
-
             # protein info and names
             sequences = all_sequences(acc)
             write_fasta(sequences,names)
-        
-        ok_button.clicked.connect(ok_clicked)
         # Open the dialog
         dialog.exec_()
-        with open('output.fasta', "r") as f:
-            aligned_text = f.read()
+        print(seq_input.text())
+        if seq_input.text() != '':
+            with open('output.fasta', "r") as f:
+                aligned_text = f.read()
 
-        # Create a new window to display the aligned text
-        aligned_window = QDialog(button)
-        aligned_layout = QVBoxLayout()
+            # Create a new window to display the aligned text
+            aligned_window = QDialog(button)
+            aligned_layout = QVBoxLayout()
 
-        # Create a text edit widget and add the aligned text to it
-        aligned_edit = QTextEdit()
-        aligned_edit.setPlainText(aligned_text)
-        aligned_edit.setReadOnly(True)
-        aligned_layout.addWidget(aligned_edit)
+            # Create a text edit widget and add the aligned text to it
+            aligned_edit = QTextEdit()
+            aligned_edit.setPlainText(aligned_text)
+            aligned_edit.setReadOnly(True)
+            aligned_layout.addWidget(aligned_edit)
 
-        # Add a close button to the layout
-        close_button = QPushButton("Close")
-        close_button.clicked.connect(aligned_window.close)
-        aligned_layout.addWidget(close_button)
+            # Add a close button to the layout
+            close_button = QPushButton("Close")
+            close_button.clicked.connect(aligned_window.close)
+            aligned_layout.addWidget(close_button)
 
-        # Set the layout of the window and show it
-        aligned_window.setLayout(aligned_layout)
-        aligned_window.setWindowTitle("Protein Sequences (output.fasta)")
-        aligned_window.exec_()
+            # Set the layout of the window and show it
+            aligned_window.setLayout(aligned_layout)
+            aligned_window.setWindowTitle("Protein Sequences (output.fasta)")
+            aligned_window.exec_()
+            ok_button.clicked.connect(ok_clicked)
     def gene_bank(button):
         seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Gene Id:")
+        if seq == '':
+            return "no file selected"
         if ok_pressed:
             # get data
             protein_analysis = get_genbank_info(seq)
