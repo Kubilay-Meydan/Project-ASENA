@@ -134,7 +134,7 @@ class TextEditor(QMainWindow):
         phylo_menu.addAction(one_click)
         create_alignment = QAction('Create Alignment', self)
         phylo_menu.addAction(create_alignment)
-        multiple_alignment = QAction('Multiple Alignment from File', self)
+        multiple_alignment = QAction('From Alignment File', self)
         phylo_menu.addAction(multiple_alignment)
         phylo_button = QPushButton('Phylogeny')
         phylo_button.setMenu(phylo_menu)
@@ -143,6 +143,7 @@ class TextEditor(QMainWindow):
         #connect button
         one_click.triggered.connect(self.one_click)
         create_alignment.triggered.connect(self.create_alignement)
+        multiple_alignment.triggered.connect(self.from_alignement)
         
         # Create widget for text editor
         editor_widget = QWidget()
@@ -160,7 +161,7 @@ class TextEditor(QMainWindow):
         image_button = QPushButton('Insert Image')
         one_click_button = QPushButton('One_click')
         create_alignment = QPushButton('Create_Alignment')
-
+        multiple_alignment = QPushButton('From Alignement File')
 
         # Connect buttons to their respective functions
         file_button.clicked.connect(self.open_file)
@@ -169,6 +170,7 @@ class TextEditor(QMainWindow):
         image_button.clicked.connect(self.insert_image)
         one_click_button.clicked.connect(self.one_click)
         create_alignment.clicked.connect(self.create_alignement)
+        multiple_alignment.clicked.connect(self.from_alignement)
 
         # Add buttons to the text editor toolbar
         editor_toolbar.addWidget(file_button)
@@ -219,7 +221,21 @@ class TextEditor(QMainWindow):
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
     
-        
+    def from_alignement(self):
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        # Get the path to the selected file
+        if file_path == '':
+            return "no file selected"
+        fig = make_phylogenetic_tree_bof('aligned')
+        # create a matplotlib figure canvas
+        canvas = FigureCanvasAgg(fig)
+        # create a widget box to hold the canvas and add it to the app
+        canvas_widget = widgets.Output()
+        with canvas_widget:
+            display(canvas)
+        box = widgets.Box(children=[canvas_widget])
+        display(box)
+
     def create_alignement(button):
         file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
         Align_muscle(file_path, 'aligned')
