@@ -5,7 +5,7 @@ from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import Box, widgets
-from PyQt5.QtWidgets import QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
+from PyQt5.QtWidgets import QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 from IPython.display import display
@@ -17,38 +17,6 @@ from IPython.display import display, FileLinks
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 import requests
 from main import *
-
-def display_protein_stats():
-    # Open a dialog window to get user input
-    seq, names, ok_pressed = QInputDialog.getText(None, None, "Protein Statistics", "Enter protein sequence:")
-
-    # Only continue if the user clicked OK
-    if ok_pressed:
-        # Calculate protein statistics
-        protein_analysis = ProteinAnalysis(seq)
-        stats = {
-            "Molecular weight (grams per mole)": protein_analysis.molecular_weight(),
-            "Aromaticity": protein_analysis.aromaticity(),
-            "Instability index (%)": protein_analysis.instability_index(),
-            "Isoelectric point (pH)": protein_analysis.isoelectric_point(),
-            "Secondary structure fraction (%)": protein_analysis.secondary_structure_fraction(),
-        }
-
-        # Display protein statistics in a new window
-        stats_window = QDialog()
-        stats_layout = QVBoxLayout()
-
-        for stat, value in stats.items():
-            label = QLabel(f"{stat}: {value}")
-            stats_layout.addWidget(label)
-
-        close_button = QPushButton("Close")
-        close_button.clicked.connect(stats_window.close)
-        stats_layout.addWidget(close_button)
-
-        stats_window.setLayout(stats_layout)
-        stats_window.setWindowTitle("Protein Statistics")
-        stats_window.exec_()
 
 class TextEditor(QMainWindow):
     # Get the current working directory
@@ -104,7 +72,7 @@ class TextEditor(QMainWindow):
         main_toolbar.addWidget(tools_button)
 
 
-        prot_stats_action.triggered.connect(display_protein_stats)
+        prot_stats_action.triggered.connect(self.display_protein_stats)
 
         #Create Widget for Prot with sub-buttons
         prot_menu = QMenu('Prot', self)
@@ -225,6 +193,90 @@ class TextEditor(QMainWindow):
         # Set window title and dimensions
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
+
+
+
+    def pattern_frequency_dialog(button):
+        dialog = QDialog()
+        dialog.setWindowTitle("Pattern Frequency")
+
+        # Create labels and text edit boxes
+        sequence_label = QLabel("Sequence:")
+        sequence_edit = QTextEdit()
+        sequence_edit.setPlaceholderText("Enter a sequence")
+
+        pattern_label = QLabel("Pattern:")
+        pattern_edit = QTextEdit()
+        pattern_edit.setPlaceholderText("Enter a pattern")
+
+        # Create buttons
+        ok_button = QPushButton("OK")
+        cancel_button = QPushButton("Cancel")
+
+        # Create horizontal layout for buttons
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(ok_button)
+        button_layout.addWidget(cancel_button)
+
+        # Create vertical layout for labels and text edit boxes
+        layout = QVBoxLayout()
+        layout.addWidget(sequence_label)
+        layout.addWidget(sequence_edit)
+        layout.addWidget(pattern_label)
+        layout.addWidget(pattern_edit)
+        layout.addLayout(button_layout)
+
+        # Connect the OK and Cancel buttons to their respective functions
+        ok_button.clicked.connect(lambda: write_frequency_recurrences(sequence_edit.toPlainText(), pattern_edit.toPlainText()))
+        ok_button.clicked.connect(dialog.accept)
+        cancel_button.clicked.connect(dialog.reject)
+
+        dialog.setLayout(layout)
+        dialog.exec_()
+
+    def display_protein_stats(button):
+    # Open a dialog window to get user input
+        seq, ok_pressed = QInputDialog.getText(None, "Protein Statistics", "Enter protein sequence in capital letters:")
+        # Only continue if the user clicked OK
+        if ok_pressed:
+            # Check if the input sequence is valid
+            if not is_valid_sequence(seq):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Invalid sequence")
+                msg.setInformativeText("The sequence you entered contains invalid characters. Please enter a valid protein sequence.")
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return
+
+            # Calculate protein statistics
+            protein_analysis = ProteinAnalysis(seq)
+            sec_struct = protein_analysis.secondary_structure_fraction()
+            stats = {
+                "Molecular weight": f"{protein_analysis.molecular_weight():.2f} Da",
+                "Aromaticity": f"{protein_analysis.aromaticity():.2f}",
+                "Instability index (%)": f"{protein_analysis.instability_index():.2f}",
+                "Isoelectric point (pH)": f"{protein_analysis.isoelectric_point():.2f}",
+                "Secondary structure fraction (%) (helix)": f"{sec_struct[0]:.2f}",
+                "Secondary structure fraction  (%) (sheet)": f"{sec_struct[1]:.2f}",
+                "Secondary structure fraction (%) (coil)": f"{sec_struct[2]:.2f}"
+            }
+
+            # Display protein statistics in a new window
+            stats_window = QDialog()
+            stats_layout = QVBoxLayout()
+
+            for stat, value in stats.items():
+                label = QLabel(f"{stat}: {value}")
+                stats_layout.addWidget(label)
+
+            close_button = QPushButton("Close")
+            close_button.clicked.connect(stats_window.close)
+            stats_layout.addWidget(close_button)
+
+            stats_window.setLayout(stats_layout)
+            stats_window.setWindowTitle("Protein Statistics")
+            stats_window.exec_()
 
     def uniprot(button):
         # Create a QDialog with two input fields
