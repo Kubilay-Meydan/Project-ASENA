@@ -15,7 +15,6 @@ import ipywidgets as widgets
 import ipyfilechooser as filechooser
 from IPython.display import display, FileLinks
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-from py4j.java_gateway import JavaGateway
 import requests
 from main import *
 
@@ -253,8 +252,10 @@ class TextEditor(QMainWindow):
             dialog.close()
             # protein info and names
             sequences = all_sequences(acc)
+            print('searching')
             write_fasta(sequences,names)
         # Open the dialog
+        ok_button.clicked.connect(ok_clicked)
         dialog.exec_()
         print(seq_input.text())
         if seq_input.text() != '':
@@ -280,7 +281,7 @@ class TextEditor(QMainWindow):
             aligned_window.setLayout(aligned_layout)
             aligned_window.setWindowTitle("Protein Sequences (output.fasta)")
             aligned_window.exec_()
-            ok_button.clicked.connect(ok_clicked)
+        
     def gene_bank(button):
         seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Gene Id:")
         if seq == '':
@@ -332,22 +333,22 @@ class TextEditor(QMainWindow):
             Align_muscle(file_path, 'aligned')
             with open('aligned', "r") as f:
                 aligned_text = f.read()
-    
+
             # Create a new window to display the aligned text
             aligned_window = QDialog(button)
             aligned_layout = QVBoxLayout()
-    
+
             # Create a text edit widget and add the aligned text to it
             aligned_edit = QTextEdit()
             aligned_edit.setPlainText(aligned_text)
             aligned_edit.setReadOnly(True)
             aligned_layout.addWidget(aligned_edit)
-    
+
             # Add a close button to the layout
             close_button = QPushButton("Close")
             close_button.clicked.connect(aligned_window.close)
             aligned_layout.addWidget(close_button)
-    
+
             # Set the layout of the window and show it
             aligned_window.setLayout(aligned_layout)
             aligned_window.setWindowTitle("Aligned Text")
