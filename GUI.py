@@ -5,7 +5,7 @@ from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import Box, widgets
-from PyQt5.QtWidgets import QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
+from PyQt5.QtWidgets import QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 from IPython.display import display
@@ -21,7 +21,7 @@ from main import *
 
 def display_protein_stats():
     # Open a dialog window to get user input
-    seq, ok_pressed = QInputDialog.getText(None, "Protein Statistics", "Enter protein sequence:")
+    seq, names, ok_pressed = QInputDialog.getText(None, None, "Protein Statistics", "Enter protein sequence:")
 
     # Only continue if the user clicked OK
     if ok_pressed:
@@ -228,13 +228,41 @@ class TextEditor(QMainWindow):
         self.showMaximized()  # Set the window to take up the full screen on first open
 
     def uniprot(button):
-        seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Uniprot Id:")
-        if ok_pressed:
-            # get data
-            protein_analysis = get_sequence(seq)
-        with open(str(seq), "r") as f:
+        global acc
+        # Create a QDialog with two input fields
+        dialog = QDialog()
+        dialog.setWindowTitle("get fasta")
+        dialog.setModal(True)
+        layout = QFormLayout()
+
+        seq_input = QLineEdit()
+        layout.addRow("Accession number(s) (comma separated no space):", seq_input)
+
+        names_input = QLineEdit()
+        layout.addRow("Protein name(s) (comma separated no space):", names_input)
+
+        ok_button = QPushButton("OK")
+        layout.addWidget(ok_button)
+        dialog.setLayout(layout)
+
+        # When the OK button is clicked, get the input values and close the dialog
+        def ok_clicked():
+            global acc
+            global names
+            acc = seq_input.text().split(",")
+            names = names_input.text().split(",")
+            dialog.close()
+
+            # protein info and names
+            sequences = all_sequences(acc)
+            write_fasta(sequences,names)
+        
+        ok_button.clicked.connect(ok_clicked)
+        # Open the dialog
+        dialog.exec_()
+        with open('output.fasta', "r") as f:
             aligned_text = f.read()
-            
+
         # Create a new window to display the aligned text
         aligned_window = QDialog(button)
         aligned_layout = QVBoxLayout()
@@ -252,7 +280,7 @@ class TextEditor(QMainWindow):
 
         # Set the layout of the window and show it
         aligned_window.setLayout(aligned_layout)
-        aligned_window.setWindowTitle("Genbank Info")
+        aligned_window.setWindowTitle("Protein Sequences (output.fasta)")
         aligned_window.exec_()
     def gene_bank(button):
         seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Gene Id:")
