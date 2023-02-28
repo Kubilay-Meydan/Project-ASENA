@@ -74,6 +74,7 @@ class TextEditor(QMainWindow):
 
         prot_stats_action.triggered.connect(self.display_protein_stats)
         seq_find_action.triggered.connect(self.sequence_find_dialog)
+        patern_frequence_action.triggered.connect(self.pattern_frequency_dialog)
 
         #Create Widget for Prot with sub-buttons
         prot_menu = QMenu('Prot', self)
@@ -194,6 +195,74 @@ class TextEditor(QMainWindow):
         # Set window title and dimensions
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
+
+    def pattern_frequency_dialog(self):
+            # Create a new dialog window
+            dialog = QDialog(self)
+            dialog.setWindowTitle('Pattern Frequency')
+            dialog.resize(300, 100)
+
+            # Create a form layout for the dialog
+            layout = QFormLayout()
+
+            # Add fields for the sequence and pattern length
+            sequence_field = QLineEdit()
+            layout.addRow('Sequence:', sequence_field)
+            pattern_length_field = QLineEdit()
+            layout.addRow('Pattern Length:', pattern_length_field)
+
+            # Add a button to perform the search
+            search_button = QPushButton('Recherche')
+            layout.addRow(search_button)
+
+            # Connect the button to the search function
+            search_button.clicked.connect(lambda: self.perform_pattern_search(sequence_field.text(), int(pattern_length_field.text()), dialog))
+
+            # Set the layout for the dialog and display it
+            dialog.setLayout(layout)
+            dialog.exec_()
+
+    def perform_pattern_search(self, sequence, pattern_length, dialog):
+        # Get all patterns of the specified length from the sequence
+        patterns = [sequence[i:i+pattern_length] for i in range(len(sequence)-pattern_length+1)]
+
+        # Count the occurrences of each pattern and store them in a dictionary
+        counts = {}
+        for pattern in patterns:
+            if pattern in counts:
+                counts[pattern] += 1
+            else:
+                counts[pattern] = 1
+
+        # Find the most frequent pattern and its occurrences
+        most_frequent_pattern = max(counts, key=counts.get)
+        occurrences = [i for i in range(len(sequence)-pattern_length+1) if sequence[i:i+pattern_length] == most_frequent_pattern]
+
+        # Create a new dialog window to display the results
+        result_dialog = QDialog(dialog)
+        result_dialog.setWindowTitle('Résultats')
+        result_dialog.resize(300, 150)
+
+        # Create a layout for the dialog
+        layout = QVBoxLayout()
+
+        # Display the most frequent pattern and its occurrences
+        pattern_label = QLabel('Le motif le plus fréquent de longueur {} est "{}"'.format(pattern_length, most_frequent_pattern))
+        layout.addWidget(pattern_label)
+        occurrences_label = QLabel('Il apparaît {} fois aux positions suivantes : {}'.format(len(occurrences), occurrences))
+        layout.addWidget(occurrences_label)
+
+        # Add a button to close the dialog
+        close_button = QPushButton('Fermer')
+        layout.addWidget(close_button)
+
+        # Connect the button to close the dialog
+        close_button.clicked.connect(result_dialog.close)
+
+        # Set the layout for the dialog and display it
+        result_dialog.setLayout(layout)
+        result_dialog.exec_()
+
 
     def sequence_find_dialog(self):
         #Create a dialog box for sequence search
