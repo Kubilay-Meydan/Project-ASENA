@@ -213,6 +213,7 @@ class TextEditor(QMainWindow):
                 return 
             # Convertit la séquence d'ADN en ARN
             rna_sequence = dna_sequence.replace('T', 'U')
+            rna_sequence = dna_sequence.replace('t','u')
             # Affiche la séquence d'ARN dans la fenêtre de dialogue
             msg = QMessageBox()
             msg.setWindowTitle("DNA to RNA")
@@ -234,6 +235,7 @@ class TextEditor(QMainWindow):
                 return
             # Convertit la séquence d'ARN en ADN
             dna_sequence = rna_sequence.replace('U', 'T')
+            dna_sequence = rna_sequence.replace('u','t')
             # Affiche la séquence d'ADN dans la fenêtre de dialogue
             msg = QMessageBox()
             msg.setWindowTitle("RNA to DNA")
@@ -255,6 +257,7 @@ class TextEditor(QMainWindow):
                 return          
             # Convertit la séquence d'ADN complémentaire
             dnac_sequence = dna_sequence.translate(str.maketrans("ATCG", "TAGC"))[::-1]
+            dnac_sequence = dna_sequence.translate(str.maketrans("atcg", "tagc"))[::-1]
             # Affiche la séquence d'ADN complémentaire dans la fenêtre de dialogue
             msg = QMessageBox()
             msg.setWindowTitle("DNA to DNAc")
@@ -357,34 +360,18 @@ class TextEditor(QMainWindow):
             pattern = pattern_box.text().upper()
 
             # Search for the pattern in the sequence
-            positions = []
-            count = 0
-            for i in range(len(sequence)):
-                if sequence[i:i+len(pattern)] == pattern:
-                    positions.append(i+1)
-                    count += 1
+            pat = search_a_pattern(sequence, pattern)[0]
+            count = search_a_pattern(sequence,pattern)[3]
+            positions= search_a_pattern(sequence,pattern)[2]
 
             # Display the number of occurrences and positions of the pattern in the sequence
-            result_label.setText('Pattern "{}" found {} times at positions: {}'.format(pattern, count, positions))
+            result_label.setText('Pattern "{}" found {} times at positions: {}'.format(pat, count, positions))
 
         # Connect the search button to the search_pattern function
         search_button.clicked.connect(search_pattern)
 
         dialog.setLayout(layout)
         dialog.exec_()
-
-    def search_sequence(sequence, pattern):
-        # Search for the pattern in the sequence
-        positions = []
-        count = 0
-        for i in range(len(sequence)):
-            if sequence[i:i+len(pattern)] == pattern:
-                positions.append(i+1)
-                count += 1
-
-        # Return the number of occurrences and positions of the pattern in the sequence
-        return count, positions
-    
 
     def display_protein_stats(button):
     # Open a dialog window to get user input

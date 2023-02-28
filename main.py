@@ -3,17 +3,37 @@ from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstruct
 from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 
+def search_a_pattern(seq, pattern):
+    positions = []
+    count = 0
+    for i in range(len(seq)):
+        if seq[i:i+len(pattern)] == pattern:
+            positions.append(i+1)
+            count += 1
+    return pattern, seq, positions, count
+
+def search_sequence(sequence, pattern):
+        # Search for the pattern in the sequence
+        positions = []
+        count = 0
+        for i in range(len(sequence)):
+            if sequence[i:i+len(pattern)] == pattern:
+                positions.append(i+1)
+                count += 1
+
+        # Return the number of occurrences and positions of the pattern in the sequence
+        return count, positions
 
 def is_valid_sequence(seq):
     amino_acids = set("ACDEFGHIKLMNPQRSTVWY")
     return all(aa in amino_acids for aa in seq)
 
 def is_valid_enter_DNA(seq):
-    nucleotids = set("ATGC")
+    nucleotids = set("ATGCatgc")
     return all(nc in nucleotids for nc in seq)
 
 def is_valid_enter_RNA(seq):
-    nucleotids = set("AUGC")
+    nucleotids = set("AUGCaugc")
     return all(nc in nucleotids for nc in seq)
 
 entry = ''
@@ -28,6 +48,14 @@ def DNA_to_RNA(entry):
             ans+=('g') 
         if char == 't':
             ans+=('u')
+        if char == 'A':
+            ans+=('A')
+        if char == 'C':
+            ans+=('C')
+        if char == 'G':
+            ans+=('G') 
+        if char == 'T':
+            ans+=('U')
     return ans
 
 Entrez.email = "your@email.com"  # replace with your email address
