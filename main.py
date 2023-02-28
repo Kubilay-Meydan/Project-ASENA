@@ -8,29 +8,6 @@ def is_valid_sequence(seq):
     amino_acids = set("ACDEFGHIKLMNPQRSTVWY")
     return all(aa in amino_acids for aa in seq)
 
-
-def write_frequency_recurrences(sequence, pattern):
-        """
-        This function searches for all recurrences of a given pattern in the input sequence of nucleotides and writes the results to a file.
-        """
-        start = 0
-        result = []
-        while True:
-            index = sequence.find(pattern, start)
-            if index == -1:
-                break
-            result.append(index)
-            start = index + 1
-
-        with open(f"frequency_recurrence_result_{pattern}.txt", "w") as file:
-            if result:
-                file.write("The pattern '{}' was found at the following positions in the input sequence:\n".format(pattern))
-                for i, pos in enumerate(result):
-                    file.write("Position {}: {}\n".format(i+1, pos))
-            else:
-                file.write("The pattern '{}' was not found in the input sequence.".format(pattern))
-
-
 entry = ''
 def DNA_to_RNA(entry):
     ans = ''

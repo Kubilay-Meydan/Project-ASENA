@@ -5,7 +5,7 @@ from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import Box, widgets
-from PyQt5.QtWidgets import QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
+from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 from IPython.display import display
@@ -73,6 +73,7 @@ class TextEditor(QMainWindow):
 
 
         prot_stats_action.triggered.connect(self.display_protein_stats)
+        seq_find_action.triggered.connect(self.sequence_find_dialog)
 
         #Create Widget for Prot with sub-buttons
         prot_menu = QMenu('Prot', self)
@@ -194,45 +195,61 @@ class TextEditor(QMainWindow):
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
 
+    def sequence_find_dialog(self):
+        #Create a dialog box for sequence search
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Sequence Find')
+        layout = QFormLayout()
 
+        # Create a text box for user to input sequence and pattern
+        sequence_box = QLineEdit()
+        layout.addRow('Sequence:', sequence_box)
+        pattern_box = QLineEdit()
+        layout.addRow('Pattern:', pattern_box)
 
-    def pattern_frequency_dialog(button):
-        dialog = QDialog()
-        dialog.setWindowTitle("Pattern Frequency")
+        # Create a button to initiate pattern search
+        search_button = QPushButton('Search')
+        layout.addRow(search_button)
 
-        # Create labels and text edit boxes
-        sequence_label = QLabel("Sequence:")
-        sequence_edit = QTextEdit()
-        sequence_edit.setPlaceholderText("Enter a sequence")
+        # Create a label to display search results
+        result_label = QLabel()
+        layout.addRow('Result:', result_label)
 
-        pattern_label = QLabel("Pattern:")
-        pattern_edit = QTextEdit()
-        pattern_edit.setPlaceholderText("Enter a pattern")
+        # Define function to search for pattern in sequence
+        def search_pattern():
+            # Get the sequence and pattern from user input
+            sequence = sequence_box.text().upper()
+            pattern = pattern_box.text().upper()
 
-        # Create buttons
-        ok_button = QPushButton("OK")
-        cancel_button = QPushButton("Cancel")
+            # Search for the pattern in the sequence
+            positions = []
+            count = 0
+            for i in range(len(sequence)):
+                if sequence[i:i+len(pattern)] == pattern:
+                    positions.append(i+1)
+                    count += 1
 
-        # Create horizontal layout for buttons
-        button_layout = QHBoxLayout()
-        button_layout.addWidget(ok_button)
-        button_layout.addWidget(cancel_button)
+            # Display the number of occurrences and positions of the pattern in the sequence
+            result_label.setText('Pattern "{}" found {} times at positions: {}'.format(pattern, count, positions))
 
-        # Create vertical layout for labels and text edit boxes
-        layout = QVBoxLayout()
-        layout.addWidget(sequence_label)
-        layout.addWidget(sequence_edit)
-        layout.addWidget(pattern_label)
-        layout.addWidget(pattern_edit)
-        layout.addLayout(button_layout)
-
-        # Connect the OK and Cancel buttons to their respective functions
-        ok_button.clicked.connect(lambda: write_frequency_recurrences(sequence_edit.toPlainText(), pattern_edit.toPlainText()))
-        ok_button.clicked.connect(dialog.accept)
-        cancel_button.clicked.connect(dialog.reject)
+        # Connect the search button to the search_pattern function
+        search_button.clicked.connect(search_pattern)
 
         dialog.setLayout(layout)
         dialog.exec_()
+
+    def search_sequence(sequence, pattern):
+        # Search for the pattern in the sequence
+        positions = []
+        count = 0
+        for i in range(len(sequence)):
+            if sequence[i:i+len(pattern)] == pattern:
+                positions.append(i+1)
+                count += 1
+
+        # Return the number of occurrences and positions of the pattern in the sequence
+        return count, positions
+    
 
     def display_protein_stats(button):
     # Open a dialog window to get user input
