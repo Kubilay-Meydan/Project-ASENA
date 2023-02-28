@@ -15,7 +15,7 @@ import ipywidgets as widgets
 import ipyfilechooser as filechooser
 from IPython.display import display, FileLinks
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-import requests
+import requests 
 from main import *
 
 class TextEditor(QMainWindow):
@@ -75,6 +75,9 @@ class TextEditor(QMainWindow):
         prot_stats_action.triggered.connect(self.display_protein_stats)
         seq_find_action.triggered.connect(self.sequence_find_dialog)
         patern_frequence_action.triggered.connect(self.pattern_frequency_dialog)
+        dna_to_rna_action.triggered.connect(self.dna_to_rna)
+        rna_to_dna_action.triggered.connect(self.rna_to_dna)
+        dna_to_dnac_action.triggered.connect(self.dna_to_dnac)
 
         #Create Widget for Prot with sub-buttons
         prot_menu = QMenu('Prot', self)
@@ -195,6 +198,45 @@ class TextEditor(QMainWindow):
         # Set window title and dimensions
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
+
+    def dna_to_rna(button):
+        # Ouvre une fenêtre de dialogue pour entrer la séquence d'ADN
+        dna_sequence, ok = QInputDialog.getText(None, 'DNA to RNA', 'Enter DNA sequence:')
+        if ok:
+            # Convertit la séquence d'ADN en ARN
+            rna_sequence = dna_sequence.replace('T', 'U')
+            # Affiche la séquence d'ARN dans la fenêtre de dialogue
+            msg = QMessageBox()
+            msg.setWindowTitle("DNA to RNA")
+            msg.setText(f"DNA sequence: {dna_sequence}\nRNA sequence: {rna_sequence}")
+            msg.exec_()
+
+
+    def rna_to_dna(button):
+        # Ouvre une fenêtre de dialogue pour entrer la séquence d'ARN
+        rna_sequence, ok = QInputDialog.getText(None, 'RNA to DNA', 'Enter RNA sequence:')
+        if ok:
+            # Convertit la séquence d'ARN en ADN
+            dna_sequence = rna_sequence.replace('U', 'T')
+            # Affiche la séquence d'ADN dans la fenêtre de dialogue
+            msg = QMessageBox()
+            msg.setWindowTitle("RNA to DNA")
+            msg.setText(f"RNA sequence: {rna_sequence}\nDNA sequence: {dna_sequence}")
+            msg.exec_()
+
+
+    def dna_to_dnac(button):
+        # Ouvre une fenêtre de dialogue pour entrer la séquence d'ADN
+        dna_sequence, ok = QInputDialog.getText(None, 'DNA to DNAc', 'Enter DNA sequence:')
+        if ok:
+            # Convertit la séquence d'ADN complémentaire
+            dnac_sequence = dna_sequence.translate(str.maketrans("ATCG", "TAGC"))[::-1]
+            # Affiche la séquence d'ADN complémentaire dans la fenêtre de dialogue
+            msg = QMessageBox()
+            msg.setWindowTitle("DNA to DNAc")
+            msg.setText(f"DNA sequence: {dna_sequence}\nDNAc sequence: {dnac_sequence}")
+            msg.exec_()
+
 
     def pattern_frequency_dialog(self):
             # Create a new dialog window
