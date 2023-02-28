@@ -203,6 +203,14 @@ class TextEditor(QMainWindow):
         # Ouvre une fenêtre de dialogue pour entrer la séquence d'ADN
         dna_sequence, ok = QInputDialog.getText(None, 'DNA to RNA', 'Enter DNA sequence:')
         if ok:
+            if not is_valid_enter_DNA(dna_sequence):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Invalid sequence")
+                msg.setInformativeText("The sequence you entered contains invalid characters. Please enter a valid nucleic sequence")
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return 
             # Convertit la séquence d'ADN en ARN
             rna_sequence = dna_sequence.replace('T', 'U')
             # Affiche la séquence d'ARN dans la fenêtre de dialogue
@@ -216,6 +224,14 @@ class TextEditor(QMainWindow):
         # Ouvre une fenêtre de dialogue pour entrer la séquence d'ARN
         rna_sequence, ok = QInputDialog.getText(None, 'RNA to DNA', 'Enter RNA sequence:')
         if ok:
+            if not is_valid_enter_RNA(rna_sequence):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Invalid sequence")
+                msg.setInformativeText("The sequence you entered contains invalid characters. Please enter a valid nucleic sequence")
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return
             # Convertit la séquence d'ARN en ADN
             dna_sequence = rna_sequence.replace('U', 'T')
             # Affiche la séquence d'ADN dans la fenêtre de dialogue
@@ -229,6 +245,14 @@ class TextEditor(QMainWindow):
         # Ouvre une fenêtre de dialogue pour entrer la séquence d'ADN
         dna_sequence, ok = QInputDialog.getText(None, 'DNA to DNAc', 'Enter DNA sequence:')
         if ok:
+            if not is_valid_enter_DNA(dna_sequence):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Invalid sequence")
+                msg.setInformativeText("The sequence you entered contains invalid characters. Please enter a valid nucleic sequence")
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return          
             # Convertit la séquence d'ADN complémentaire
             dnac_sequence = dna_sequence.translate(str.maketrans("ATCG", "TAGC"))[::-1]
             # Affiche la séquence d'ADN complémentaire dans la fenêtre de dialogue

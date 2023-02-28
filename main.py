@@ -8,6 +8,14 @@ def is_valid_sequence(seq):
     amino_acids = set("ACDEFGHIKLMNPQRSTVWY")
     return all(aa in amino_acids for aa in seq)
 
+def is_valid_enter_DNA(seq):
+    nucleotids = set("ATGC")
+    return all(nc in nucleotids for nc in seq)
+
+def is_valid_enter_RNA(seq):
+    nucleotids = set("AUGC")
+    return all(nc in nucleotids for nc in seq)
+
 entry = ''
 def DNA_to_RNA(entry):
     ans = ''
