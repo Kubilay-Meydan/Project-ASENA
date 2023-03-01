@@ -3,33 +3,38 @@ from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstruct
 from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 
+def search_a_pattern(seq, pattern):
+    positions = []
+    count = 0
+    for i in range(len(seq)):
+        if seq[i:i+len(pattern)] == pattern:
+            positions.append(i+1)
+            count += 1
+    return pattern, seq, positions, count
+
+def search_sequence(sequence, pattern):
+        # Search for the pattern in the sequence
+        positions = []
+        count = 0
+        for i in range(len(sequence)):
+            if sequence[i:i+len(pattern)] == pattern:
+                positions.append(i+1)
+                count += 1
+
+        # Return the number of occurrences and positions of the pattern in the sequence
+        return count, positions
 
 def is_valid_sequence(seq):
     amino_acids = set("ACDEFGHIKLMNPQRSTVWY")
     return all(aa in amino_acids for aa in seq)
 
+def is_valid_enter_DNA(seq):
+    nucleotids = set("ATGCatgc")
+    return all(nc in nucleotids for nc in seq)
 
-def write_frequency_recurrences(sequence, pattern):
-        """
-        This function searches for all recurrences of a given pattern in the input sequence of nucleotides and writes the results to a file.
-        """
-        start = 0
-        result = []
-        while True:
-            index = sequence.find(pattern, start)
-            if index == -1:
-                break
-            result.append(index)
-            start = index + 1
-
-        with open(f"frequency_recurrence_result_{pattern}.txt", "w") as file:
-            if result:
-                file.write("The pattern '{}' was found at the following positions in the input sequence:\n".format(pattern))
-                for i, pos in enumerate(result):
-                    file.write("Position {}: {}\n".format(i+1, pos))
-            else:
-                file.write("The pattern '{}' was not found in the input sequence.".format(pattern))
-
+def is_valid_enter_RNA(seq):
+    nucleotids = set("AUGCaugc")
+    return all(nc in nucleotids for nc in seq)
 
 entry = ''
 def DNA_to_RNA(entry):
@@ -43,6 +48,14 @@ def DNA_to_RNA(entry):
             ans+=('g') 
         if char == 't':
             ans+=('u')
+        if char == 'A':
+            ans+=('A')
+        if char == 'C':
+            ans+=('C')
+        if char == 'G':
+            ans+=('G') 
+        if char == 'T':
+            ans+=('U')
     return ans
 
 Entrez.email = "your@email.com"  # replace with your email address

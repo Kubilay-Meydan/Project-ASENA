@@ -5,7 +5,7 @@ from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import Box, widgets
-from PyQt5.QtWidgets import QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
+from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 from IPython.display import display
@@ -15,7 +15,7 @@ import ipywidgets as widgets
 import ipyfilechooser as filechooser
 from IPython.display import display, FileLinks
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-import requests
+import requests 
 from main import *
 
 class TextEditor(QMainWindow):
@@ -73,6 +73,11 @@ class TextEditor(QMainWindow):
 
 
         prot_stats_action.triggered.connect(self.display_protein_stats)
+        seq_find_action.triggered.connect(self.sequence_find_dialog)
+        patern_frequence_action.triggered.connect(self.pattern_frequency_dialog)
+        dna_to_rna_action.triggered.connect(self.dna_to_rna)
+        rna_to_dna_action.triggered.connect(self.rna_to_dna)
+        dna_to_dnac_action.triggered.connect(self.dna_to_dnac)
 
         #Create Widget for Prot with sub-buttons
         prot_menu = QMenu('Prot', self)
@@ -194,42 +199,176 @@ class TextEditor(QMainWindow):
         self.setWindowTitle('KN Gui')
         self.showMaximized()  # Set the window to take up the full screen on first open
 
+    def dna_to_rna(button):
+        # Ouvre une fenêtre de dialogue pour entrer la séquence d'ADN
+        dna_sequence, ok = QInputDialog.getText(None, 'DNA to RNA', 'Enter DNA sequence:')
+        if ok:
+            if not is_valid_enter_DNA(dna_sequence):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Invalid sequence")
+                msg.setInformativeText("The sequence you entered contains invalid characters. Please enter a valid nucleic sequence")
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return 
+            # Convertit la séquence d'ADN en ARN
+            rna_sequence = dna_sequence.replace('T', 'U')
+            rna_sequence = dna_sequence.replace('t','u')
+            # Affiche la séquence d'ARN dans la fenêtre de dialogue
+            msg = QMessageBox()
+            msg.setWindowTitle("DNA to RNA")
+            msg.setText(f"DNA sequence: {dna_sequence}\nRNA sequence: {rna_sequence}")
+            msg.exec_()
 
 
-    def pattern_frequency_dialog(button):
-        dialog = QDialog()
-        dialog.setWindowTitle("Pattern Frequency")
+    def rna_to_dna(button):
+        # Ouvre une fenêtre de dialogue pour entrer la séquence d'ARN
+        rna_sequence, ok = QInputDialog.getText(None, 'RNA to DNA', 'Enter RNA sequence:')
+        if ok:
+            if not is_valid_enter_RNA(rna_sequence):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Invalid sequence")
+                msg.setInformativeText("The sequence you entered contains invalid characters. Please enter a valid nucleic sequence")
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return
+            # Convertit la séquence d'ARN en ADN
+            dna_sequence = rna_sequence.replace('U', 'T')
+            dna_sequence = rna_sequence.replace('u','t')
+            # Affiche la séquence d'ADN dans la fenêtre de dialogue
+            msg = QMessageBox()
+            msg.setWindowTitle("RNA to DNA")
+            msg.setText(f"RNA sequence: {rna_sequence}\nDNA sequence: {dna_sequence}")
+            msg.exec_()
 
-        # Create labels and text edit boxes
-        sequence_label = QLabel("Sequence:")
-        sequence_edit = QTextEdit()
-        sequence_edit.setPlaceholderText("Enter a sequence")
 
-        pattern_label = QLabel("Pattern:")
-        pattern_edit = QTextEdit()
-        pattern_edit.setPlaceholderText("Enter a pattern")
+    def dna_to_dnac(button):
+        # Ouvre une fenêtre de dialogue pour entrer la séquence d'ADN
+        dna_sequence, ok = QInputDialog.getText(None, 'DNA to DNAc', 'Enter DNA sequence:')
+        if ok:
+            if not is_valid_enter_DNA(dna_sequence):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Invalid sequence")
+                msg.setInformativeText("The sequence you entered contains invalid characters. Please enter a valid nucleic sequence")
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return          
+            # Convertit la séquence d'ADN complémentaire
+            dnac_sequence = dna_sequence.translate(str.maketrans("ATCG", "TAGC"))[::-1]
+            dnac_sequence = dna_sequence.translate(str.maketrans("atcg", "tagc"))[::-1]
+            # Affiche la séquence d'ADN complémentaire dans la fenêtre de dialogue
+            msg = QMessageBox()
+            msg.setWindowTitle("DNA to DNAc")
+            msg.setText(f"DNA sequence: {dna_sequence}\nDNAc sequence: {dnac_sequence}")
+            msg.exec_()
 
-        # Create buttons
-        ok_button = QPushButton("OK")
-        cancel_button = QPushButton("Cancel")
 
-        # Create horizontal layout for buttons
-        button_layout = QHBoxLayout()
-        button_layout.addWidget(ok_button)
-        button_layout.addWidget(cancel_button)
+    def pattern_frequency_dialog(self):
+            # Create a new dialog window
+            dialog = QDialog(self)
+            dialog.setWindowTitle('Pattern Frequency')
+            dialog.resize(300, 100)
 
-        # Create vertical layout for labels and text edit boxes
+            # Create a form layout for the dialog
+            layout = QFormLayout()
+
+            # Add fields for the sequence and pattern length
+            sequence_field = QLineEdit()
+            layout.addRow('Sequence:', sequence_field)
+            pattern_length_field = QLineEdit()
+            layout.addRow('Pattern Length:', pattern_length_field)
+
+            # Add a button to perform the search
+            search_button = QPushButton('Recherche')
+            layout.addRow(search_button)
+
+            # Connect the button to the search function
+            search_button.clicked.connect(lambda: self.perform_pattern_search(sequence_field.text(), int(pattern_length_field.text()), dialog))
+
+            # Set the layout for the dialog and display it
+            dialog.setLayout(layout)
+            dialog.exec_()
+
+    def perform_pattern_search(self, sequence, pattern_length, dialog):
+        # Get all patterns of the specified length from the sequence
+        patterns = [sequence[i:i+pattern_length] for i in range(len(sequence)-pattern_length+1)]
+
+        # Count the occurrences of each pattern and store them in a dictionary
+        counts = {}
+        for pattern in patterns:
+            if pattern in counts:
+                counts[pattern] += 1
+            else:
+                counts[pattern] = 1
+
+        # Find the most frequent pattern and its occurrences
+        most_frequent_pattern = max(counts, key=counts.get)
+        occurrences = [i for i in range(len(sequence)-pattern_length+1) if sequence[i:i+pattern_length] == most_frequent_pattern]
+
+        # Create a new dialog window to display the results
+        result_dialog = QDialog(dialog)
+        result_dialog.setWindowTitle('Résultats')
+        result_dialog.resize(300, 150)
+
+        # Create a layout for the dialog
         layout = QVBoxLayout()
-        layout.addWidget(sequence_label)
-        layout.addWidget(sequence_edit)
-        layout.addWidget(pattern_label)
-        layout.addWidget(pattern_edit)
-        layout.addLayout(button_layout)
 
-        # Connect the OK and Cancel buttons to their respective functions
-        ok_button.clicked.connect(lambda: write_frequency_recurrences(sequence_edit.toPlainText(), pattern_edit.toPlainText()))
-        ok_button.clicked.connect(dialog.accept)
-        cancel_button.clicked.connect(dialog.reject)
+        # Display the most frequent pattern and its occurrences
+        pattern_label = QLabel('Le motif le plus fréquent de longueur {} est "{}"'.format(pattern_length, most_frequent_pattern))
+        layout.addWidget(pattern_label)
+        occurrences_label = QLabel('Il apparaît {} fois aux positions suivantes : {}'.format(len(occurrences), occurrences))
+        layout.addWidget(occurrences_label)
+
+        # Add a button to close the dialog
+        close_button = QPushButton('Fermer')
+        layout.addWidget(close_button)
+
+        # Connect the button to close the dialog
+        close_button.clicked.connect(result_dialog.close)
+
+        # Set the layout for the dialog and display it
+        result_dialog.setLayout(layout)
+        result_dialog.exec_()
+
+
+    def sequence_find_dialog(self):
+        #Create a dialog box for sequence search
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Sequence Find')
+        layout = QFormLayout()
+
+        # Create a text box for user to input sequence and pattern
+        sequence_box = QLineEdit()
+        layout.addRow('Sequence:', sequence_box)
+        pattern_box = QLineEdit()
+        layout.addRow('Pattern:', pattern_box)
+
+        # Create a button to initiate pattern search
+        search_button = QPushButton('Search')
+        layout.addRow(search_button)
+
+        # Create a label to display search results
+        result_label = QLabel()
+        layout.addRow('Result:', result_label)
+
+        # Define function to search for pattern in sequence
+        def search_pattern():
+            # Get the sequence and pattern from user input
+            sequence = sequence_box.text().upper()
+            pattern = pattern_box.text().upper()
+
+            # Search for the pattern in the sequence
+            pat = search_a_pattern(sequence, pattern)[0]
+            count = search_a_pattern(sequence,pattern)[3]
+            positions= search_a_pattern(sequence,pattern)[2]
+
+            # Display the number of occurrences and positions of the pattern in the sequence
+            result_label.setText('Pattern "{}" found {} times at positions: {}'.format(pat, count, positions))
+
+        # Connect the search button to the search_pattern function
+        search_button.clicked.connect(search_pattern)
 
         dialog.setLayout(layout)
         dialog.exec_()
