@@ -203,7 +203,9 @@ class TextEditor(QMainWindow):
         # Ouvre une fenêtre de dialogue pour entrer la séquence d'ADN
         dna_sequence, ok = QInputDialog.getText(None, 'DNA to RNA', 'Enter DNA sequence:')
         if ok:
-            if not is_valid_enter_DNA(dna_sequence):
+            # Convertit la séquence d'ADN en ARN
+            dna_sequence_upper = dna_sequence.upper()
+            if not is_valid_enter_DNA(dna_sequence_upper):
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
                 msg.setText("Invalid sequence")
@@ -211,21 +213,21 @@ class TextEditor(QMainWindow):
                 msg.setWindowTitle("Error")
                 msg.exec_()
                 return 
-            # Convertit la séquence d'ADN en ARN
-            rna_sequence = dna_sequence.replace('T', 'U')
-            rna_sequence = dna_sequence.replace('t','u')
+            rna_sequence = dna_sequence_upper.replace('T', 'U')
+            rna_sequence = rna_sequence.replace('t', 'u')
             # Affiche la séquence d'ARN dans la fenêtre de dialogue
             msg = QMessageBox()
             msg.setWindowTitle("DNA to RNA")
-            msg.setText(f"DNA sequence: {dna_sequence}\nRNA sequence: {rna_sequence}")
+            msg.setText(f"DNA sequence: {dna_sequence_upper}\nRNA sequence: {rna_sequence}")
             msg.exec_()
-
 
     def rna_to_dna(button):
         # Ouvre une fenêtre de dialogue pour entrer la séquence d'ARN
         rna_sequence, ok = QInputDialog.getText(None, 'RNA to DNA', 'Enter RNA sequence:')
         if ok:
-            if not is_valid_enter_RNA(rna_sequence):
+            # Convertit la séquence d'ARN en ADN
+            rna_sequence_upper = rna_sequence.upper()
+            if not is_valid_enter_RNA(rna_sequence_upper):
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
                 msg.setText("Invalid sequence")
@@ -233,21 +235,21 @@ class TextEditor(QMainWindow):
                 msg.setWindowTitle("Error")
                 msg.exec_()
                 return
-            # Convertit la séquence d'ARN en ADN
-            dna_sequence = rna_sequence.replace('U', 'T')
-            dna_sequence = rna_sequence.replace('u','t')
+            dna_sequence = rna_sequence_upper.replace('U', 'T')
+            dna_sequence = dna_sequence.replace('u', 't')
             # Affiche la séquence d'ADN dans la fenêtre de dialogue
             msg = QMessageBox()
             msg.setWindowTitle("RNA to DNA")
-            msg.setText(f"RNA sequence: {rna_sequence}\nDNA sequence: {dna_sequence}")
+            msg.setText(f"RNA sequence: {rna_sequence_upper}\nDNA sequence: {dna_sequence}")
             msg.exec_()
-
 
     def dna_to_dnac(button):
         # Ouvre une fenêtre de dialogue pour entrer la séquence d'ADN
         dna_sequence, ok = QInputDialog.getText(None, 'DNA to DNAc', 'Enter DNA sequence:')
         if ok:
-            if not is_valid_enter_DNA(dna_sequence):
+            # Convertit la séquence d'ADN en ADN complémentaire
+            dna_sequence_upper = dna_sequence.upper()
+            if not is_valid_enter_DNA(dna_sequence_upper):
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
                 msg.setText("Invalid sequence")
@@ -255,13 +257,12 @@ class TextEditor(QMainWindow):
                 msg.setWindowTitle("Error")
                 msg.exec_()
                 return          
-            # Convertit la séquence d'ADN complémentaire
-            dnac_sequence = dna_sequence.translate(str.maketrans("ATCG", "TAGC"))[::-1]
-            dnac_sequence = dna_sequence.translate(str.maketrans("atcg", "tagc"))[::-1]
+            dnac_sequence = dna_sequence_upper.translate(str.maketrans("ATCG", "TAGC"))[::-1]
+            dnac_sequence = dnac_sequence.translate(str.maketrans("atcg", "tagc"))[::-1]
             # Affiche la séquence d'ADN complémentaire dans la fenêtre de dialogue
             msg = QMessageBox()
             msg.setWindowTitle("DNA to DNAc")
-            msg.setText(f"DNA sequence: {dna_sequence}\nDNAc sequence: {dnac_sequence}")
+            msg.setText(f"DNA sequence: {dna_sequence_upper}\nDNAc sequence: {dnac_sequence}")
             msg.exec_()
 
 
@@ -290,35 +291,39 @@ class TextEditor(QMainWindow):
             # Set the layout for the dialog and display it
             dialog.setLayout(layout)
             dialog.exec_()
-
     def perform_pattern_search(self, sequence, pattern_length, dialog):
         # Get all patterns of the specified length from the sequence
         patterns = [sequence[i:i+pattern_length] for i in range(len(sequence)-pattern_length+1)]
 
         # Count the occurrences of each pattern and store them in a dictionary
         counts = {}
-        for pattern in patterns:
+        for i, pattern in enumerate(patterns):
             if pattern in counts:
-                counts[pattern] += 1
+                counts[pattern]['count'] += 1
+                counts[pattern]['positions'].append(i+1)
             else:
-                counts[pattern] = 1
+                counts[pattern] = {'count': 1, 'positions': [i+1]}
 
         # Find the most frequent pattern and its occurrences
-        most_frequent_pattern = max(counts, key=counts.get)
-        occurrences = [i for i in range(len(sequence)-pattern_length+1) if sequence[i:i+pattern_length] == most_frequent_pattern]
+        most_frequent_pattern = max(counts, key=lambda x: counts[x]['count'])
+        occurrences = counts[most_frequent_pattern]['positions']
 
         # Create a new dialog window to display the results
         result_dialog = QDialog(dialog)
         result_dialog.setWindowTitle('Résultats')
-        result_dialog.resize(300, 150)
+        result_dialog.resize(300, 100)
 
         # Create a layout for the dialog
         layout = QVBoxLayout()
 
+        # Display the input sequence
+        sequence_label = QLabel(f"Séquence d'entrée : {sequence}")
+        layout.addWidget(sequence_label)
+
         # Display the most frequent pattern and its occurrences
-        pattern_label = QLabel('Le motif le plus fréquent de longueur {} est "{}"'.format(pattern_length, most_frequent_pattern))
+        pattern_label = QLabel(f'Le motif le plus fréquent de longueur {pattern_length} est "{most_frequent_pattern}"')
         layout.addWidget(pattern_label)
-        occurrences_label = QLabel('Il apparaît {} fois aux positions suivantes : {}'.format(len(occurrences), occurrences))
+        occurrences_label = QLabel(f'Il apparaît {len(occurrences)} fois aux positions suivantes : {occurrences}')
         layout.addWidget(occurrences_label)
 
         # Add a button to close the dialog
@@ -331,7 +336,6 @@ class TextEditor(QMainWindow):
         # Set the layout for the dialog and display it
         result_dialog.setLayout(layout)
         result_dialog.exec_()
-
 
     def sequence_find_dialog(self):
         #Create a dialog box for sequence search
