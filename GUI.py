@@ -508,7 +508,8 @@ class TextEditor(QMainWindow):
         # Get the path to the selected file
         if file_path == '':
             return "no file selected"
-        fig = make_phylogenetic_tree_bof('aligned')
+        run_bmge_on_alignment(file_path, 'curated.fasta')
+        fig = make_phylogenetic_tree_bof(file_path)
         # create a matplotlib figure canvas
         canvas = FigureCanvasAgg(fig)
         # create a widget box to hold the canvas and add it to the app
@@ -559,8 +560,9 @@ class TextEditor(QMainWindow):
         # Get the path to the selected file
         if file_path == '':
             return "no file selected"
-        Align_muscle(file_path, 'aligned')
-        fig = make_phylogenetic_tree_bof('aligned')
+        Align_muscle('output.fasta','aligned')
+        run_bmge_on_alignment('aligned.fasta', 'curated.fasta')
+        fig = make_phylogenetic_tree_bof('curated.fasta')
         # create a matplotlib figure canvas
         canvas = FigureCanvasAgg(fig)
         # create a widget box to hold the canvas and add it to the app

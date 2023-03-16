@@ -2,6 +2,7 @@ from Bio import Entrez, SeqIO
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
+import subprocess
 
 def search_a_pattern(seq, pattern):
     positions = []
@@ -131,27 +132,48 @@ def write_fasta(sequences, names):
             fasta.write(">" + name + "\n")
             fasta.write(seq + "\n")
 
+def Align_muscle(sequences, output):
+    """
+    Aligns sequences using MUSCLE and outputs an aligned fasta file.
 
+    Parameters:
+    sequences (str): The path to the file containing sequences in fasta format.
+    output (str): The path to the file to write the aligned sequences in fasta format.
 
-def Align_muscle(sequences,output):
-# Align the sequences using muscle
+    Returns:
+    str: The path to the aligned fasta file.
+    """
+
+    # Align the sequences using MUSCLE
     muscle_exe = "muscle.exe"
-    cline = MuscleCommandline(muscle_exe,input=sequences, out=output, clw=True)
+    cline = MuscleCommandline(muscle_exe, input=sequences, out=output, clw=True)
     cline()
+
+    # Convert the output to aligned fasta format
     alignment = AlignIO.read(output, "clustal")
-    return alignment
+    AlignIO.write(alignment, output + ".fasta", "fasta")
 
+    return output
 
+def run_bmge_on_alignment(muscle_file_path, output_file_path):
+    # Run BMGE on the input alignment file
+    bmge_command = ['java', '-jar', 'BMGE.jar', '-i', muscle_file_path, '-t', 'aa', '-o', output_file_path]
+    bmge_output = subprocess.check_output(bmge_command, universal_newlines=True)
 
-def make_phylogenetic_tree_bof(alignment_file):
-    # Load the multiple sequence alignment from file
-    alignment = AlignIO.read(alignment_file, "clustal")
+    print('BMGE filtering complete. Filtered alignment saved to: ' + output_file_path)
+
+def make_phylogenetic_tree_bof(fasta_file):
+    # Load the sequences from the fasta file
+    sequences = AlignIO.read(fasta_file, "fasta")
     # Calculate the pairwise distances between sequences
     calculator = DistanceCalculator('identity')
-    dm = calculator.get_distance(alignment)
+    dm = calculator.get_distance(sequences)
     # Construct the phylogenetic tree using the UPGMA method
     constructor = DistanceTreeConstructor(calculator, 'upgma')
-    tree = constructor.build_tree(alignment)
+    tree = constructor.build_tree(sequences)
+    for clade in tree.find_clades():
+        if clade.name.startswith("Inner"):
+            clade.name = ""
     # Draw and show the tree
     Phylo.draw(tree)
 
@@ -179,9 +201,9 @@ write_fasta(sequences,names)
 
 #   Uses MUSCLE alignement to make a Multiple Sequence Alignement File
 Align_muscle('output.fasta','aligned')
-
+run_bmge_on_alignment('aligned.fasta', 'curated.fasta')
 #   Makes a simple Phylo tree, no bootstrap yet
-make_phylogenetic_tree_bof('aligned')
+make_phylogenetic_tree_bof('curated.fasta')
 
 
 
