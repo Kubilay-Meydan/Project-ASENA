@@ -6,7 +6,7 @@ from Bio.Align.Applications import MuscleCommandline
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import Box, widgets
 from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
-from PyQt5.QtCore import Qt, QMimeData
+from PyQt5.QtCore import Qt, QMimeData,QTimer
 from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
 from IPython.display import display
 import sys
@@ -15,14 +15,46 @@ import ipywidgets as widgets
 import ipyfilechooser as filechooser
 from IPython.display import display, FileLinks
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-import requests 
+import requests, random
 from main import *
+
+class PopupWindow(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("ASENA")
+        layout = QVBoxLayout()
+        self.label = QLabel("A.S.E.N.A", self)
+        self.label.setAlignment(Qt.AlignCenter)
+        font = self.label.font()
+        font.setPointSize(53)
+        self.label.setFont(font)
+        self.label.setStyleSheet('color : black')
+        layout.addWidget(self.label)
+        self.sub_label = QLabel("Automatic Sequence Editing and Nomography Assistant", self)
+        self.sub_label.setAlignment(Qt.AlignCenter)
+        font.setPointSize(7)
+        self.sub_label.setStyleSheet('color : black')
+        self.sub_label.setFont(font)
+        layout.addWidget(self.sub_label)
+        self.random_label = QLabel(random.choice([str("Someday, we'll all be free"),str("5AM in Versailles"),str("No one man should have all that power"), str("Work well, you're important"), str("Up from the ashes, into the sky"), str("Make it all come to life")]), self)
+        self.random_label.setAlignment(Qt.AlignCenter)
+        font = QFont()
+        font.setPointSize(15)
+        font_id = QFontDatabase.addApplicationFont("font2.ttf")
+        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        font.setFamily(font_family)
+        self.random_label.setStyleSheet('color : black')
+        self.random_label.setFont(font)
+        layout.addWidget(self.random_label)
+        self.setLayout(layout)
+        self.setFixedSize(400, 200)
+        self.setWindowFlag(Qt.FramelessWindowHint)
+        QTimer.singleShot(3000, self.close)
+
 
 class TextEditor(QMainWindow):
     # Get the current working directory
     def __init__(self):
-        current_dir = os.getcwd()
-        print(current_dir)
         super().__init__()
         font_id = QFontDatabase.addApplicationFont("font.ttf")
         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
@@ -32,28 +64,7 @@ class TextEditor(QMainWindow):
         main_toolbar = self.addToolBar('Main Toolbar')
         main_toolbar.setMovable(False) # Disable toolbar movement
 
-        #Create Widget File with sub-buttons
-        file_menu = QMenu('File', self)
-        new_action = QAction('New', self)
-        new_action.setShortcut('Ctrl+N')
-        open_action = QAction('Open', self)
-        open_action.setShortcut('Ctrl+O')
-        save_action = QAction('Save', self)
-        save_action.setShortcut('Ctrl+S')
-        save_as_action = QAction('Save As', self)
-        file_menu.addAction(new_action)
-        file_menu.addAction(open_action)
-        file_menu.addAction(save_action)
-        file_menu.addAction(save_as_action)
-        file_button = QPushButton('File')
-        file_button.setMenu(file_menu)
-        main_toolbar.addWidget(file_button)
-        # Connect buttons to their respective functions
-        new_action.triggered.connect(self.new_file)
-        open_action.triggered.connect(lambda: self.open_save_file_dialog('Open File', 'r'))
-        save_action.triggered.connect(lambda: self.open_save_file_dialog('Save File', 'w'))
-        save_as_action.triggered.connect(lambda: self.open_save_file_dialog('Save File As', 'w'))
-        # Create dropdown menu for Tools with sub-buttons
+
         tools_menu = QMenu('Tools', self)
         dna_to_rna_action = QAction('DNA to RNA', self)
         rna_to_dna_action = QAction('RNA to DNA', self)
@@ -196,7 +207,7 @@ class TextEditor(QMainWindow):
         self.setCentralWidget(central_widget)
 
         # Set window title and dimensions
-        self.setWindowTitle('KN Gui')
+        self.setWindowTitle('Project ASENA')
         self.showMaximized()  # Set the window to take up the full screen on first open
 
     def dna_to_rna(button):
@@ -606,29 +617,9 @@ class TextEditor(QMainWindow):
 
 def run_gui():
     app = QApplication(sys.argv)
+    popup = PopupWindow()  # create an instance of the PopupWindow class
+    popup.exec_()  # show the popup window and wait for it to be closed
     editor = TextEditor()
     editor.show()
     sys.exit(app.exec_())
 run_gui()
-'''
-from Bio import AlignIO
-from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
-from Bio.Phylo.Consensus import bootstrap_consensus
-import matplotlib.pyplot as plt
-from Bio import Phylo
-def make_phylogenetic_tree_bof(alignment_file, bootstraps=100):
-    # Load the multiple sequence alignment from file
-    alignment = AlignIO.read(alignment_file, "clustal")
-    # Calculate the pairwise distances between sequences
-    calculator = DistanceCalculator('identity')
-    dm = calculator.get_distance(alignment)
-    # Construct the phylogenetic tree using the UPGMA method
-    constructor = DistanceTreeConstructor(calculator, 'upgma')
-    tree = constructor.build_tree(alignment)
-    # Perform bootstrapping to estimate the confidence in the branches of the tree
-    bootstrapped_trees = bootstrap_consensus(alignment_file, bootstraps,tree, 'strict_consensus')
-    # Draw and show the tree
-    Phylo.draw(bootstrapped_trees)
-    plt.show()
-make_phylogenetic_tree_bof('aligned')
-'''
