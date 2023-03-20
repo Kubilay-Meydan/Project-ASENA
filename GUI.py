@@ -116,16 +116,20 @@ class TextEditor(QMainWindow):
         phylo_menu.addAction(one_click)
         create_alignment = QAction('Create Alignment', self)
         phylo_menu.addAction(create_alignment)
-        multiple_alignment = QAction('From Alignment File', self)
-        phylo_menu.addAction(multiple_alignment)
+        alignement_curation = QAction('BGME Curation', self)
+        phylo_menu.addAction(alignement_curation)
+        multiple_alignement = QAction('From Alignment File', self)
+        phylo_menu.addAction(multiple_alignement)
         phylo_button = QPushButton('Phylogeny')
         phylo_button.setMenu(phylo_menu)
         main_toolbar.addWidget(phylo_button)
 
+
         #connect button
         one_click.triggered.connect(self.one_click)
         create_alignment.triggered.connect(self.create_alignement)
-        multiple_alignment.triggered.connect(self.from_alignement)
+        alignement_curation.triggered.connect(self.BMGE_curation)
+        multiple_alignement.triggered.connect(self.from_alignement)
         gene_bank.triggered.connect(self.gene_bank)
         uni_prot.triggered.connect(self.uniprot)
 
@@ -145,7 +149,7 @@ class TextEditor(QMainWindow):
         image_button = QPushButton('Insert Image')
         one_click_button = QPushButton('One_click')
         create_alignment = QPushButton('Create_Alignment')
-        multiple_alignment = QPushButton('From Alignement File')
+        alignement_curation_button = QPushButton('Curate alignement with BMGE')
         gene_bank = QPushButton("get genebank info")
         uni_prot = QPushButton("get prot sequences")
 
@@ -156,7 +160,7 @@ class TextEditor(QMainWindow):
         image_button.clicked.connect(self.insert_image)
         one_click_button.clicked.connect(self.one_click)
         create_alignment.clicked.connect(self.create_alignement)
-        multiple_alignment.clicked.connect(self.from_alignement)
+        alignement_curation_button.clicked.connect(self.BMGE_curation)
         gene_bank.clicked.connect(self.gene_bank)
         uni_prot.clicked.connect(self.uniprot)
 
@@ -524,7 +528,7 @@ class TextEditor(QMainWindow):
         if file_path == '':
             return "no file selected"
         run_bmge_on_alignment(file_path, 'curated.fasta')
-        fig = make_phylogenetic_tree_bof(file_path)
+        fig = make_phylogenetic_tree_bof('curated.fasta')
         # create a matplotlib figure canvas
         canvas = FigureCanvasAgg(fig)
         # create a widget box to hold the canvas and add it to the app
@@ -533,6 +537,33 @@ class TextEditor(QMainWindow):
             display(canvas)
         box = widgets.Box(children=[canvas_widget])
         display(box)
+    
+    def BMGE_curation(button):
+        print("hello")
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        if file_path != '':
+            run_bmge_on_alignment(file_path, 'curated.fasta')
+            with open('curated.fasta', "r") as f:
+                aligned_text = f.read()
+            # Create a new window to display the aligned text
+            aligned_window = QDialog(button)
+            aligned_layout = QVBoxLayout()
+
+            # Create a text edit widget and add the aligned text to it
+            aligned_edit = QTextEdit()
+            aligned_edit.setPlainText(aligned_text)
+            aligned_edit.setReadOnly(True)
+            aligned_layout.addWidget(aligned_edit)
+
+            # Add a close button to the layout
+            close_button = QPushButton("Close")
+            close_button.clicked.connect(aligned_window.close)
+            aligned_layout.addWidget(close_button)
+
+            # Set the layout of the window and show it
+            aligned_window.setLayout(aligned_layout)
+            aligned_window.setWindowTitle("Curated alignement")
+            aligned_window.exec_()
 
     def create_alignement(button):
         file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
