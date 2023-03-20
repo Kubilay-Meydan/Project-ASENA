@@ -7,7 +7,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import Box, widgets
 from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt, QMimeData,QTimer
-from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase
+from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase,QPalette,QBrush
 from IPython.display import display
 import sys
 import os
@@ -51,11 +51,19 @@ class PopupWindow(QDialog):
         self.setWindowFlag(Qt.FramelessWindowHint)
         QTimer.singleShot(3000, self.close)
 
-
 class TextEditor(QMainWindow):
     # Get the current working directory
     def __init__(self):
         super().__init__()
+        # Create a QPixmap object with the path to the image file
+        pixmap = QPixmap("background_logo.png")
+
+        # Create a QPalette object and set its brush to the QPixmap object
+        palette = self.palette()
+        palette.setBrush(QPalette.Window, QBrush(pixmap))
+
+        # Set the QPalette object as the background of the TextEditor
+        self.setPalette(palette)
         font_id = QFontDatabase.addApplicationFont("font.ttf")
         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
         font = QFont(font_family, 10)
@@ -64,7 +72,7 @@ class TextEditor(QMainWindow):
         main_toolbar = self.addToolBar('Main Toolbar')
         main_toolbar.setMovable(False) # Disable toolbar movement
 
-
+        
         tools_menu = QMenu('Tools', self)
         dna_to_rna_action = QAction('DNA to RNA', self)
         rna_to_dna_action = QAction('RNA to DNA', self)
@@ -124,7 +132,6 @@ class TextEditor(QMainWindow):
         phylo_button.setMenu(phylo_menu)
         main_toolbar.addWidget(phylo_button)
 
-
         #connect button
         one_click.triggered.connect(self.one_click)
         create_alignment.triggered.connect(self.create_alignement)
@@ -163,7 +170,6 @@ class TextEditor(QMainWindow):
         alignement_curation_button.clicked.connect(self.BMGE_curation)
         gene_bank.clicked.connect(self.gene_bank)
         uni_prot.clicked.connect(self.uniprot)
-
 
         # Add buttons to the text editor toolbar
         editor_toolbar.addWidget(file_button)
@@ -496,6 +502,17 @@ class TextEditor(QMainWindow):
         seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Gene Id:")
         if seq == '':
             return "no file selected"
+        for a in seq:
+            print(a)
+            if a not in ['0','1','2','3','4','5','6','7','8','9']:
+                print(type(seq))
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Invalid entry")
+                msg.setInformativeText("Gene id must be a number")
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return 'error'
         if ok_pressed:
             # get data
             protein_analysis = get_genbank_info(seq)
@@ -523,10 +540,18 @@ class TextEditor(QMainWindow):
         aligned_window.exec_()
         
     def from_alignement(self):
-        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "Text Files (*.txt); Fasta Files (*.fasta)")
         # Get the path to the selected file
         if file_path == '':
             return "no file selected"
+        if not is_fasta(file_path):
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Critical)
+                    msg.setText("Invalid sequence")
+                    msg.setInformativeText("The file is not in fasta format")
+                    msg.setWindowTitle("Error")
+                    msg.exec_()
+                    return 'error'
         run_bmge_on_alignment(file_path, 'curated.fasta')
         fig = make_phylogenetic_tree_bof('curated.fasta')
         # create a matplotlib figure canvas
@@ -539,13 +564,20 @@ class TextEditor(QMainWindow):
         display(box)
     
     def BMGE_curation(button):
-        print("hello")
-        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "Text Files (*.txt); Fasta Files (*.fasta)")
         if file_path != '':
-            run_bmge_on_alignment(file_path, 'curated.fasta')
             with open('curated.fasta', "r") as f:
                 aligned_text = f.read()
+            if not is_fasta(file_path):
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Critical)
+                    msg.setText("Invalid sequence")
+                    msg.setInformativeText("The file is not in fasta format")
+                    msg.setWindowTitle("Error")
+                    msg.exec_()
+                    return 'error'
             # Create a new window to display the aligned text
+            run_bmge_on_alignment(file_path, 'curated.fasta')
             aligned_window = QDialog(button)
             aligned_layout = QVBoxLayout()
 
@@ -566,8 +598,16 @@ class TextEditor(QMainWindow):
             aligned_window.exec_()
 
     def create_alignement(button):
-        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "Text Files (*.txt); Fasta Files (*.fasta)")
         if file_path != '':
+            if not is_fasta(file_path):
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Critical)
+                    msg.setText("Invalid sequence")
+                    msg.setInformativeText("The file is not in fasta format")
+                    msg.setWindowTitle("Error")
+                    msg.exec_()
+                    return 'error'
             Align_muscle(file_path, 'aligned')
             with open('aligned', "r") as f:
                 aligned_text = f.read()
@@ -602,21 +642,28 @@ class TextEditor(QMainWindow):
                 self.text_edit.setPlainText(file.read())
     
     def one_click(button):   
-        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)")
+        file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "Text Files (*.txt); Fasta Files (*.fasta)")
         # Get the path to the selected file
-        if file_path == '':
-            return "no file selected"
-        Align_muscle('output.fasta','aligned')
-        run_bmge_on_alignment('aligned.fasta', 'curated.fasta')
-        fig = make_phylogenetic_tree_bof('curated.fasta')
-        # create a matplotlib figure canvas
-        canvas = FigureCanvasAgg(fig)
-        # create a widget box to hold the canvas and add it to the app
-        canvas_widget = widgets.Output()
-        with canvas_widget:
-            display(canvas)
-        box = widgets.Box(children=[canvas_widget])
-        display(box)
+        if file_path != '':
+            if not is_fasta(file_path):
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Critical)
+                    msg.setText("Invalid sequence")
+                    msg.setInformativeText("The file is not in fasta format")
+                    msg.setWindowTitle("Error")
+                    msg.exec_()
+                    return 'error'
+            Align_muscle('output.fasta','aligned')
+            run_bmge_on_alignment('aligned.fasta', 'curated.fasta')
+            fig = make_phylogenetic_tree_bof('curated.fasta')
+            # create a matplotlib figure canvas
+            canvas = FigureCanvasAgg(fig)
+            # create a widget box to hold the canvas and add it to the app
+            canvas_widget = widgets.Output()
+            with canvas_widget:
+                display(canvas)
+            box = widgets.Box(children=[canvas_widget])
+            display(box)
 
     def save_file(self):
         # Open file dialog to select file to save to
