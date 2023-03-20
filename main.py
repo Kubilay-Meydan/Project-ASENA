@@ -177,6 +177,10 @@ def make_phylogenetic_tree_bof(fasta_file):
     # Draw and show the tree
     Phylo.draw(tree)
 
+def is_fasta(filename):
+    with open(filename, "r") as handle:
+        fasta = SeqIO.parse(handle, "fasta")
+        return any(fasta)  # False when `fasta` is empty, i.e. wasn't a FASTA file
 '''
 # List of protein accession numbers
 accessions = ['P66928','P14949','P10599','P34723','P0A4L3','P0AA25','P08629','P10639','P42115']
