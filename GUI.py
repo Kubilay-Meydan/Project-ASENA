@@ -1,22 +1,54 @@
-from Bio import Entrez, SeqIO
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
-from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
-from Bio import AlignIO, Phylo
-from Bio.Align.Applications import MuscleCommandline
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from ipywidgets import Box, widgets
-from PyQt5.QtWidgets import QDialogButtonBox, QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
-from PyQt5.QtCore import Qt, QMimeData,QTimer
-from PyQt5.QtGui import QPixmap, QFont, QDrag, QTextImageFormat, QFontDatabase,QPalette,QBrush
+from ipywidgets import widgets
+from PyQt5.QtWidgets import QCheckBox, QGroupBox, QRadioButton, QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
+from PyQt5.QtCore import Qt,QTimer
+from PyQt5.QtGui import QPixmap, QFont, QTextImageFormat, QFontDatabase,QPalette,QBrush
 from IPython.display import display
 import sys
 import os
 import ipywidgets as widgets
-import ipyfilechooser as filechooser
-from IPython.display import display, FileLinks
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-import requests, random
+import random
 from main import *
+def read_settings():
+    global tutorial
+    global background 
+    global games
+    global glitch_mode
+    tutorial = ''
+    background = ''
+    games = ''
+    glitch_mode = ''
+    with open('settings.txt') as f:
+        contents = f.readlines()
+        for line in contents:
+            if line.strip().startswith('tutorial'):
+                parsed = line.strip().split('= ')
+                if parsed[1] == 'True':
+                    tutorial = True
+                else:
+                    tutorial = False
+            if line.strip().startswith('email'):
+                parsed = line.strip().split('= ')
+                email = parsed[1]
+            if line.strip().startswith('background'):
+                parsed = line.strip().split('= ')
+                background = parsed[1]
+            if line.strip().startswith('games'):
+                parsed = line.strip().split('= ')
+                if parsed[1] == 'True':
+                    games = True
+                else:
+                    games = False
+            if line.strip().startswith('glitch_mode'):
+                parsed = line.strip().split('= ')
+                if parsed[1] == 'True':
+                    glitch_mode = True
+                else:
+                    glitch_mode = False    
+read_settings()
+print(tutorial, background, games, glitch_mode)
 
 class PopupWindow(QDialog):
     def __init__(self):
@@ -36,11 +68,11 @@ class PopupWindow(QDialog):
         self.sub_label.setStyleSheet('color : black')
         self.sub_label.setFont(font)
         layout.addWidget(self.sub_label)
-        self.random_label = QLabel(random.choice([str("Someday, we'll all be free"),str("5AM in Versailles"),str("No one man should have all that power"), str("Work well, you're important"), str("Up from the ashes, into the sky"), str("Make it all come to life")]), self)
+        self.random_label = QLabel(random.choice([str("🐭🐭🐭🐭🐭🐭🐭"),str("Someday, we'll all be free"),str("5AM in Versailles"),str("No one man should have all that power"), str("Work well, you're important"), str("Up from the ashes, into the sky"), str("Make it all come to life")]), self)
         self.random_label.setAlignment(Qt.AlignCenter)
         font = QFont()
-        font.setPointSize(15)
-        font_id = QFontDatabase.addApplicationFont("font2.ttf")
+        font.setPointSize(10)
+        font_id = QFontDatabase.addApplicationFont("font.ttf")
         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
         font.setFamily(font_family)
         self.random_label.setStyleSheet('color : black')
@@ -49,15 +81,15 @@ class PopupWindow(QDialog):
         self.setLayout(layout)
         self.setFixedSize(400, 200)
         self.setWindowFlag(Qt.FramelessWindowHint)
-        QTimer.singleShot(3000, self.close)
+        QTimer.singleShot(3200, self.close)
 
 class TextEditor(QMainWindow):
     # Get the current working directory
     def __init__(self):
         super().__init__()
         # Create a QPixmap object with the path to the image file
-        pixmap = QPixmap("background_logo.png")
-
+        pixmap = QPixmap(background)
+        
         # Create a QPalette object and set its brush to the QPixmap object
         palette = self.palette()
         palette.setBrush(QPalette.Window, QBrush(pixmap))
@@ -139,7 +171,9 @@ class TextEditor(QMainWindow):
         multiple_alignement.triggered.connect(self.from_alignement)
         gene_bank.triggered.connect(self.gene_bank)
         uni_prot.triggered.connect(self.uniprot)
-
+        settings_button = QPushButton('Settings', self)
+        main_toolbar.addWidget(settings_button)
+        settings_button.clicked.connect(self.show_settings_window)
         # Create widget for text editor
         editor_widget = QWidget()
         editor_layout = QVBoxLayout()
@@ -219,7 +253,177 @@ class TextEditor(QMainWindow):
         # Set window title and dimensions
         self.setWindowTitle('Project ASENA')
         self.showMaximized()  # Set the window to take up the full screen on first open
+    
+    def show_settings_window(self):
+        settings_window = QDialog()
+        settings_window.setWindowTitle('Settings')
+        settings_window.setGeometry(100, 100, 400, 300)
 
+        tutorial_group = QGroupBox('Tutorial', settings_window)
+        tutorial_layout = QHBoxLayout()
+        tutorial_checkbox = QCheckBox()
+        if tutorial is True:
+            tutorial_checkbox.setChecked(True)
+        else:
+            tutorial_checkbox.setChecked(False)
+        tutorial_checkbox.toggled.connect(self.update_tutorial)
+        tutorial_layout.addWidget(tutorial_checkbox)
+        tutorial_group.setLayout(tutorial_layout)
+
+        color_scheme_group = QGroupBox('Color Scheme', settings_window)
+        color_scheme_layout = QVBoxLayout()
+        color_scheme_radio1 = QRadioButton('color1')
+        if background == 'color1.png':
+            color_scheme_radio1.setChecked(True)
+        color_scheme_radio2 = QRadioButton('color2')
+        if background == "color2.png":
+            color_scheme_radio2.setChecked(True)
+        color_scheme_radio3 = QRadioButton('color3')
+        if background == "color3.png":
+            color_scheme_radio3.setChecked(True)
+        color_scheme_radio1.toggled.connect(self.update_color_scheme)
+        color_scheme_radio2.toggled.connect(self.update_color_scheme)
+        color_scheme_radio3.toggled.connect(self.update_color_scheme)
+        color_scheme_layout.addWidget(color_scheme_radio1)
+        color_scheme_layout.addWidget(color_scheme_radio2)
+        color_scheme_layout.addWidget(color_scheme_radio3)
+        color_scheme_group.setLayout(color_scheme_layout)
+
+        games_group = QGroupBox('Games', settings_window)
+        games_layout = QHBoxLayout()
+        games_checkbox = QCheckBox()
+        if games is True:
+            games_checkbox.setChecked(True)
+        else:
+            games_checkbox.setChecked(False)
+        games_checkbox.toggled.connect(self.update_game)
+        games_layout.addWidget(games_checkbox)
+        games_group.setLayout(games_layout)
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(tutorial_group)
+        main_layout.addWidget(color_scheme_group)
+        main_layout.addWidget(games_group)
+        settings_window.setLayout(main_layout)
+
+        settings_window.exec_()
+
+    def update_tutorial(self, checked):
+        self.tutorial = checked
+        global tutorial
+        self.tutorial = checked
+        if tutorial is False:
+            print('tutorial True now')
+            tutorial = True
+            input_file = "settings.txt"
+            output_file = "text_temp.txt"
+
+            with open(input_file, 'r') as file:
+                lines = file.readlines()
+
+            with open(output_file, 'w') as file:
+                for line in lines:
+                    if line.strip().startswith('tutorial'):
+                        file.write('tutorial = True\n')
+                    else:
+                        file.write(line)
+
+            # Replace the original file with the modified one
+            import os
+            os.remove(input_file)
+            os.rename(output_file, input_file)
+            return True
+        if tutorial is True:
+            print('tutorial False now')
+            tutorial = False
+            input_file = "settings.txt"
+            output_file = "text_temp.txt"
+
+            with open(input_file, 'r') as file:
+                lines = file.readlines()
+
+            with open(output_file, 'w') as file:
+                for line in lines:
+                    if line.strip().startswith('tutorial'):
+                        file.write('tutorial = False\n')
+                    else:
+                        file.write(line)
+
+            # Replace the original file with the modified one
+            import os
+            os.remove(input_file)
+            os.rename(output_file, input_file)
+            return False
+
+    def update_color_scheme(self, checked):
+        if checked:
+            global background
+            sender = self.sender()
+            self.color_scheme = sender.text()
+            option = self.color_scheme
+            if background is not str(option):
+                background = str(option)
+                input_file = "settings.txt"
+                output_file = "text_temp.txt"       
+                with open(input_file, 'r') as file:
+                    lines = file.readlines()        
+                with open(output_file, 'w') as file:
+                    for line in lines:
+                        if line.strip().startswith('background'):
+                            file.write('background = '+ str(option) + '.png\n')
+                        else:
+                            file.write(line)        
+                # Replace the original file with the modified one
+                import os
+                os.remove(input_file)
+                os.rename(output_file, input_file)
+                return False
+
+    def update_game(self, checked):
+        global games
+        self.game = checked
+        if games is False:
+            print('game True now')
+            games = True
+            input_file = "settings.txt"
+            output_file = "text_temp.txt"
+
+            with open(input_file, 'r') as file:
+                lines = file.readlines()
+
+            with open(output_file, 'w') as file:
+                for line in lines:
+                    if line.strip().startswith('games'):
+                        file.write('games = True\n')
+                    else:
+                        file.write(line)
+
+            # Replace the original file with the modified one
+            import os
+            os.remove(input_file)
+            os.rename(output_file, input_file)
+            return True
+        if games is True:
+            print('game False now')
+            games = False
+            input_file = "settings.txt"
+            output_file = "text_temp.txt"
+
+            with open(input_file, 'r') as file:
+                lines = file.readlines()
+
+            with open(output_file, 'w') as file:
+                for line in lines:
+                    if line.strip().startswith('games'):
+                        file.write('games = False\n')
+                    else:
+                        file.write(line)
+
+            # Replace the original file with the modified one
+            import os
+            os.remove(input_file)
+            os.rename(output_file, input_file)
+            return False
     def dna_to_rna(button):
         # Ouvre une fenêtre de dialogue pour entrer la séquence d'ADN
         dna_sequence, ok = QInputDialog.getText(None, 'DNA to RNA', 'Enter DNA sequence:')
@@ -653,7 +857,7 @@ class TextEditor(QMainWindow):
                     msg.setWindowTitle("Error")
                     msg.exec_()
                     return 'error'
-            Align_muscle('output.fasta','aligned')
+            Align_muscle(file_path,'aligned')
             run_bmge_on_alignment('aligned.fasta', 'curated.fasta')
             fig = make_phylogenetic_tree_bof('curated.fasta')
             # create a matplotlib figure canvas

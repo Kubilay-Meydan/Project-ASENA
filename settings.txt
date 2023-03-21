@@ -1,0 +1,5 @@
+tutorial = True
+background = color1.png
+email = None
+games = True
+glitch_mode = False
