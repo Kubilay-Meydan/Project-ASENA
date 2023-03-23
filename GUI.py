@@ -7,10 +7,8 @@ from PyQt5.QtGui import QPixmap, QFont, QTextImageFormat, QFontDatabase,QPalette
 from IPython.display import display
 import sys
 import os
-import ipywidgets as widgets
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 import random
-from main import *
+from src.main import *
 def read_settings():
     global tutorial
     global background 
@@ -20,7 +18,7 @@ def read_settings():
     background = ''
     games = ''
     glitch_mode = ''
-    with open('settings.txt') as f:
+    with open('src/settings.txt') as f:
         contents = f.readlines()
         for line in contents:
             if line.strip().startswith('tutorial'):
@@ -72,7 +70,7 @@ class PopupWindow(QDialog):
         self.random_label.setAlignment(Qt.AlignCenter)
         font = QFont()
         font.setPointSize(10)
-        font_id = QFontDatabase.addApplicationFont("font.ttf")
+        font_id = QFontDatabase.addApplicationFont("src/font.ttf")
         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
         font.setFamily(font_family)
         self.random_label.setStyleSheet('color : black')
@@ -81,14 +79,14 @@ class PopupWindow(QDialog):
         self.setLayout(layout)
         self.setFixedSize(400, 200)
         self.setWindowFlag(Qt.FramelessWindowHint)
-        QTimer.singleShot(3200, self.close)
+        QTimer.singleShot(3500, self.close)
 
 class TextEditor(QMainWindow):
     # Get the current working directory
     def __init__(self):
         super().__init__()
         # Create a QPixmap object with the path to the image file
-        pixmap = QPixmap(background)
+        pixmap = QPixmap('src/'+background)
         
         # Create a QPalette object and set its brush to the QPixmap object
         palette = self.palette()
@@ -96,7 +94,7 @@ class TextEditor(QMainWindow):
 
         # Set the QPalette object as the background of the TextEditor
         self.setPalette(palette)
-        font_id = QFontDatabase.addApplicationFont("font.ttf")
+        font_id = QFontDatabase.addApplicationFont("src/font.ttf")
         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
         font = QFont(font_family, 10)
         QApplication.setFont(font)
@@ -225,7 +223,7 @@ class TextEditor(QMainWindow):
         triangle_widget = QWidget()
         triangle_layout = QVBoxLayout()
 
-        triangle_pixmap = QPixmap('triangle.png')
+        triangle_pixmap = QPixmap('src/triangle.png')
         triangle_label = QLabel()
         triangle_label.setPixmap(triangle_pixmap)
 
@@ -273,13 +271,13 @@ class TextEditor(QMainWindow):
         color_scheme_group = QGroupBox('Color Scheme', settings_window)
         color_scheme_layout = QVBoxLayout()
         color_scheme_radio1 = QRadioButton('color1')
-        if background == 'color1.png':
+        if background == 'src/color1.png':
             color_scheme_radio1.setChecked(True)
         color_scheme_radio2 = QRadioButton('color2')
-        if background == "color2.png":
+        if background == "src/color2.png":
             color_scheme_radio2.setChecked(True)
         color_scheme_radio3 = QRadioButton('color3')
-        if background == "color3.png":
+        if background == "src/color3.png":
             color_scheme_radio3.setChecked(True)
         color_scheme_radio1.toggled.connect(self.update_color_scheme)
         color_scheme_radio2.toggled.connect(self.update_color_scheme)
@@ -300,14 +298,18 @@ class TextEditor(QMainWindow):
         games_layout.addWidget(games_checkbox)
         games_group.setLayout(games_layout)
 
+
         main_layout = QVBoxLayout()
         main_layout.addWidget(tutorial_group)
         main_layout.addWidget(color_scheme_group)
         main_layout.addWidget(games_group)
         settings_window.setLayout(main_layout)
-
+        # Add 'Save' button
+        save_button = QPushButton('Save')
+        save_button.clicked.connect(lambda: self.save_and_restart(settings_window))
+        main_layout.addWidget(save_button)
+        settings_window.setLayout(main_layout)
         settings_window.exec_()
-
     def update_tutorial(self, checked):
         self.tutorial = checked
         global tutorial
@@ -315,8 +317,8 @@ class TextEditor(QMainWindow):
         if tutorial is False:
             print('tutorial True now')
             tutorial = True
-            input_file = "settings.txt"
-            output_file = "text_temp.txt"
+            input_file = "src/settings.txt"
+            output_file = "src/text_temp.txt"
 
             with open(input_file, 'r') as file:
                 lines = file.readlines()
@@ -336,8 +338,8 @@ class TextEditor(QMainWindow):
         if tutorial is True:
             print('tutorial False now')
             tutorial = False
-            input_file = "settings.txt"
-            output_file = "text_temp.txt"
+            input_file = "src/settings.txt"
+            output_file = "src/text_temp.txt"
 
             with open(input_file, 'r') as file:
                 lines = file.readlines()
@@ -354,6 +356,14 @@ class TextEditor(QMainWindow):
             os.remove(input_file)
             os.rename(output_file, input_file)
             return False
+    def save_and_restart(self, settings_window):
+        # Save settings here if necessary
+        # (Assuming you have already saved the settings in their respective methods)
+        # Close the settings window
+        settings_window.close()
+        self.close()
+        # Set the restart flag
+        self.should_restart = True
 
     def update_color_scheme(self, checked):
         if checked:
@@ -363,8 +373,8 @@ class TextEditor(QMainWindow):
             option = self.color_scheme
             if background is not str(option):
                 background = str(option)
-                input_file = "settings.txt"
-                output_file = "text_temp.txt"       
+                input_file = "src/settings.txt"
+                output_file = "src/text_temp.txt"       
                 with open(input_file, 'r') as file:
                     lines = file.readlines()        
                 with open(output_file, 'w') as file:
@@ -385,8 +395,8 @@ class TextEditor(QMainWindow):
         if games is False:
             print('game True now')
             games = True
-            input_file = "settings.txt"
-            output_file = "text_temp.txt"
+            input_file = "src/settings.txt"
+            output_file = "src/text_temp.txt"
 
             with open(input_file, 'r') as file:
                 lines = file.readlines()
@@ -406,8 +416,8 @@ class TextEditor(QMainWindow):
         if games is True:
             print('game False now')
             games = False
-            input_file = "settings.txt"
-            output_file = "text_temp.txt"
+            input_file = "src/settings.txt"
+            output_file = "src/text_temp.txt"
 
             with open(input_file, 'r') as file:
                 lines = file.readlines()
@@ -607,6 +617,8 @@ class TextEditor(QMainWindow):
         seq, ok_pressed = QInputDialog.getText(None, "Protein Statistics", "Enter protein sequence in capital letters:")
         # Only continue if the user clicked OK
         if ok_pressed:
+            if seq == '':
+                return False
             # Check if the input sequence is valid
             if not is_valid_sequence(seq):
                 msg = QMessageBox()
@@ -679,7 +691,7 @@ class TextEditor(QMainWindow):
         dialog.exec_()
         print(seq_input.text())
         if seq_input.text() != '':
-            with open('output.fasta', "r") as f:
+            with open('results/output.fasta', "r") as f:
                 aligned_text = f.read()
 
             # Create a new window to display the aligned text
@@ -699,28 +711,17 @@ class TextEditor(QMainWindow):
 
             # Set the layout of the window and show it
             aligned_window.setLayout(aligned_layout)
-            aligned_window.setWindowTitle("Protein Sequences (output.fasta)")
+            aligned_window.setWindowTitle("Protein Sequences (results/output.fasta)")
             aligned_window.exec_()
         
     def gene_bank(button):
         seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Gene Id:")
         if seq == '':
-            return "no file selected"
-        for a in seq:
-            print(a)
-            if a not in ['0','1','2','3','4','5','6','7','8','9']:
-                print(type(seq))
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Critical)
-                msg.setText("Invalid entry")
-                msg.setInformativeText("Gene id must be a number")
-                msg.setWindowTitle("Error")
-                msg.exec_()
-                return 'error'
+            return "no entry"
         if ok_pressed:
             # get data
             protein_analysis = get_genbank_info(seq)
-        with open(str(seq), "r") as f:
+        with open('results/'+str(seq), "r") as f:
             aligned_text = f.read()
 
         # Create a new window to display the aligned text
@@ -756,22 +757,13 @@ class TextEditor(QMainWindow):
                     msg.setWindowTitle("Error")
                     msg.exec_()
                     return 'error'
-        run_bmge_on_alignment(file_path, 'curated.fasta')
-        fig = make_phylogenetic_tree_bof('curated.fasta')
-        # create a matplotlib figure canvas
-        canvas = FigureCanvasAgg(fig)
-        # create a widget box to hold the canvas and add it to the app
-        canvas_widget = widgets.Output()
-        with canvas_widget:
-            display(canvas)
-        box = widgets.Box(children=[canvas_widget])
-        display(box)
+        run_bmge_on_alignment(file_path, 'results/curated.fasta')
+        make_phylo_tree_newick('results/curated.fasta')
     
     def BMGE_curation(button):
         file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "Text Files (*.txt); Fasta Files (*.fasta)")
         if file_path != '':
-            with open('curated.fasta', "r") as f:
-                aligned_text = f.read()
+
             if not is_fasta(file_path):
                     msg = QMessageBox()
                     msg.setIcon(QMessageBox.Critical)
@@ -781,7 +773,9 @@ class TextEditor(QMainWindow):
                     msg.exec_()
                     return 'error'
             # Create a new window to display the aligned text
-            run_bmge_on_alignment(file_path, 'curated.fasta')
+            run_bmge_on_alignment(file_path, 'results/curated.fasta')
+            with open('results/curated.fasta', "r") as f:
+                aligned_text = f.read()
             aligned_window = QDialog(button)
             aligned_layout = QVBoxLayout()
 
@@ -812,8 +806,8 @@ class TextEditor(QMainWindow):
                     msg.setWindowTitle("Error")
                     msg.exec_()
                     return 'error'
-            Align_muscle(file_path, 'aligned')
-            with open('aligned', "r") as f:
+            Align_muscle(file_path, 'results/aligned')
+            with open('results/aligned', "r") as f:
                 aligned_text = f.read()
 
             # Create a new window to display the aligned text
@@ -857,17 +851,9 @@ class TextEditor(QMainWindow):
                     msg.setWindowTitle("Error")
                     msg.exec_()
                     return 'error'
-            Align_muscle(file_path,'aligned')
-            run_bmge_on_alignment('aligned.fasta', 'curated.fasta')
-            fig = make_phylogenetic_tree_bof('curated.fasta')
-            # create a matplotlib figure canvas
-            canvas = FigureCanvasAgg(fig)
-            # create a widget box to hold the canvas and add it to the app
-            canvas_widget = widgets.Output()
-            with canvas_widget:
-                display(canvas)
-            box = widgets.Box(children=[canvas_widget])
-            display(box)
+            Align_muscle(file_path,'results/aligned')
+            run_bmge_on_alignment('results/aligned.fasta', 'results/curated.fasta')
+            make_phylo_tree_newick('results/curated.fasta')
 
     def save_file(self):
         # Open file dialog to select file to save to
@@ -898,10 +884,21 @@ class TextEditor(QMainWindow):
             self.text_edit.textCursor().insertImage(imageFormat)
 
 def run_gui():
-    app = QApplication(sys.argv)
-    popup = PopupWindow()  # create an instance of the PopupWindow class
-    popup.exec_()  # show the popup window and wait for it to be closed
-    editor = TextEditor()
-    editor.show()
-    sys.exit(app.exec_())
+    should_restart = True
+    while should_restart:
+        app = QApplication(sys.argv)
+        popup = PopupWindow()  # create an instance of the PopupWindow class
+        popup.exec_()  # show the popup window and wait for it to be closed
+        editor = TextEditor()
+        editor.show()
+        exit_code = app.exec_()
+
+        # Check if the application should restart
+        should_restart = editor.should_restart if hasattr(editor, 'should_restart') else False
+
+        # Clean up QApplication instance
+        del app
+
+    sys.exit(exit_code)
+
 run_gui()

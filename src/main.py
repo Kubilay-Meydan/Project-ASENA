@@ -3,6 +3,10 @@ from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstruct
 from Bio import AlignIO, Phylo
 from Bio.Align.Applications import MuscleCommandline
 import subprocess
+from Bio import AlignIO
+from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
+from ete3 import Tree
+
 
 def search_a_pattern(seq, pattern):
     positions = []
@@ -37,7 +41,6 @@ def is_valid_enter_RNA(seq):
     nucleotids = set("AUGCaugc")
     return all(nc in nucleotids for nc in seq)
 
-entry = ''
 def DNA_to_RNA(entry):
     ans = ''
     for char in entry.lower():
@@ -59,10 +62,8 @@ def DNA_to_RNA(entry):
             ans+=('U')
     return ans
 
-Entrez.email = "your@email.com"  # replace with your email address
-
 def get_genbank_info(gene_id):
-    with open(str(gene_id), 'w') as f:
+    with open('results/'+str(gene_id), 'w') as f:
         handle = Entrez.efetch(db="nucleotide", id=gene_id, rettype="gb", retmode="text")
         record = SeqIO.read(handle, "genbank")
         cds_sequence = []
@@ -107,8 +108,6 @@ def get_genbank_info(gene_id):
                 f.write('\n')
                 numberintron += 1
 
-
-
 def get_sequence(acc, seq_type='protein'):
     Entrez.email = 'your_email@example.com' # required by NCBI
     handle = Entrez.efetch(db='protein', id=acc, rettype='gb', retmode='text')
@@ -127,7 +126,7 @@ def all_sequences(accessions):
     return sequences
 
 def write_fasta(sequences, names):
-    with open("output.fasta", "w") as fasta:
+    with open("results/output.fasta", "w") as fasta:
         for seq, name in zip(sequences, names):
             fasta.write(">" + name + "\n")
             fasta.write(seq + "\n")
@@ -160,87 +159,40 @@ def run_bmge_on_alignment(muscle_file_path, output_file_path):
     bmge_command = ['java', '-jar', 'BMGE.jar', '-i', muscle_file_path, '-t', 'aa', '-o', output_file_path]
     bmge_output = subprocess.check_output(bmge_command, universal_newlines=True)
 
-    print('BMGE filtering complete. Filtered alignment saved to: ' + output_file_path)
+    print('BMGE filtering complete. Filtered alignment saved to: ' + 'results/'+output_file_path)
 
-def make_phylogenetic_tree_bof(fasta_file):
-    # Load the sequences from the fasta file
-    sequences = AlignIO.read(fasta_file, "fasta")
-    # Calculate the pairwise distances between sequences
-    calculator = DistanceCalculator('identity')
-    dm = calculator.get_distance(sequences)
-    # Construct the phylogenetic tree using the UPGMA method
-    constructor = DistanceTreeConstructor(calculator, 'upgma')
-    tree = constructor.build_tree(sequences)
-    for clade in tree.find_clades():
+def make_phylo_tree_newick(fasta_file):
+    # Load the FASTA file and perform multiple sequence alignment
+    alignment = AlignIO.read(fasta_file, "fasta")
+
+    # Calculate pairwise distance matrix
+    calculator = DistanceCalculator("identity")
+    dm = calculator.get_distance(alignment)
+
+    # Construct a neighbor-joining tree from the distance matrix
+    constructor = DistanceTreeConstructor()
+    
+    nj_tree = constructor.nj(dm)
+
+    # Convert the tree to a Newick format string
+    newick_string = nj_tree.format("newick")
+
+    # Save the Newick format tree to a file
+    with open("results/my_tree_file.txt", "w") as f:
+        f.write(newick_string)
+
+    # Load the Newick format tree file into ETE toolkit
+    tree = Tree("results/my_tree_file.txt", format = 1)
+    phylo_tree = Phylo.read("results/my_tree_file.txt", "newick")
+    for clade in phylo_tree.find_clades():
         if clade.name.startswith("Inner"):
             clade.name = ""
-    # Draw and show the tree
-    Phylo.draw(tree)
+    tree.ladderize()
+    Phylo.draw(phylo_tree, branch_labels=lambda c: c.branch_length)
+    return tree
+
 
 def is_fasta(filename):
     with open(filename, "r") as handle:
         fasta = SeqIO.parse(handle, "fasta")
         return any(fasta)  # False when `fasta` is empty, i.e. wasn't a FASTA file
-'''
-# List of protein accession numbers
-accessions = ['P66928','P14949','P10599','P34723','P0A4L3','P0AA25','P08629','P10639','P42115']
-# List of protein names 
-names = ['THIO_HELPY', 'THIO_BACSU', 'THIO_HUMAN', 'THIO_PENCH', 'THIO_LISMO','THIO_ECOLI', 'THIO_CHICK', 'THIO_MOUSE', 'THIO_NEUCR']
-
-
-#
-#       Gene id for human insulin, gets Exon and Intron details:
-#
-
-gene_id = 'L15440.1'
-#get_genbank_info(gene_id)
-
-#
-#       Makes Phylo tree from accession:
-#
-
-#   Writes protein sequences to a fasta file using the uniprot accessions above and the names list given by user:
-sequences = all_sequences(accessions)
-write_fasta(sequences,names)
-
-#   Uses MUSCLE alignement to make a Multiple Sequence Alignement File
-Align_muscle('output.fasta','aligned')
-run_bmge_on_alignment('aligned.fasta', 'curated.fasta')
-#   Makes a simple Phylo tree, no bootstrap yet
-make_phylogenetic_tree_bof('curated.fasta')
-
-
-
-Bootsrap???
-
-
-
-
-from Bio import AlignIO
-from dendropy import Tree
-from dendropy.math import euclidean_distance
-
-def make_phylogenetic_tree(alignment_file, bootstrap_replicates=100):
-    # Load the multiple sequence alignment from file
-    alignment = AlignIO.read(alignment_file, "clustal")
-    # Compute the pairwise distances between sequences in the alignment
-    distances = []
-    for i, seq1 in enumerate(alignment):
-        for j in range(i + 1, len(alignment)):
-            seq2 = alignment[j]
-            distances.append(euclidean_distance(seq1.seq, seq2.seq))
-    # Construct the phylogenetic tree using the UPGMA method
-    tree = Tree.from_matrix(distances, "upgma")
-    # Apply bootstrapping to the tree
-    bootstrap_trees = tree.bootstrap_trees(replicates=bootstrap_replicates)
-    # Create a consensus tree from the bootstrapped trees
-    consensus_tree = tree.consensus(min_freq=0.5)
-    # Draw and show the tree
-    consensus_tree.print_plot()
-
-
-
-make_phylogenetic_tree('aligned')
-
-
-'''
