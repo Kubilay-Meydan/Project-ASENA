@@ -9,44 +9,7 @@ import sys
 import os
 import random
 from src.main import *
-def read_settings():
-    global tutorial
-    global background 
-    global games
-    global glitch_mode
-    tutorial = ''
-    background = ''
-    games = ''
-    glitch_mode = ''
-    with open('src/settings.txt') as f:
-        contents = f.readlines()
-        for line in contents:
-            if line.strip().startswith('tutorial'):
-                parsed = line.strip().split('= ')
-                if parsed[1] == 'True':
-                    tutorial = True
-                else:
-                    tutorial = False
-            if line.strip().startswith('email'):
-                parsed = line.strip().split('= ')
-                email = parsed[1]
-            if line.strip().startswith('background'):
-                parsed = line.strip().split('= ')
-                background = parsed[1]
-            if line.strip().startswith('games'):
-                parsed = line.strip().split('= ')
-                if parsed[1] == 'True':
-                    games = True
-                else:
-                    games = False
-            if line.strip().startswith('glitch_mode'):
-                parsed = line.strip().split('= ')
-                if parsed[1] == 'True':
-                    glitch_mode = True
-                else:
-                    glitch_mode = False    
-read_settings()
-print(tutorial, background, games, glitch_mode)
+
 
 class PopupWindow(QDialog):
     def __init__(self):
@@ -79,6 +42,44 @@ class PopupWindow(QDialog):
         self.setLayout(layout)
         self.setFixedSize(400, 200)
         self.setWindowFlag(Qt.FramelessWindowHint)
+        def read_settings():
+            global tutorial
+            global background 
+            global games
+            global glitch_mode
+            tutorial = ''
+            background = ''
+            games = ''
+            glitch_mode = ''
+            with open('src/settings.txt') as f:
+                contents = f.readlines()
+                for line in contents:
+                    if line.strip().startswith('tutorial'):
+                        parsed = line.strip().split('= ')
+                        if parsed[1] == 'True':
+                            tutorial = True
+                        else:
+                            tutorial = False
+                    if line.strip().startswith('email'):
+                        parsed = line.strip().split('= ')
+                        email = parsed[1]
+                    if line.strip().startswith('background'):
+                        parsed = line.strip().split('= ')
+                        background = parsed[1]
+                    if line.strip().startswith('games'):
+                        parsed = line.strip().split('= ')
+                        if parsed[1] == 'True':
+                            games = True
+                        else:
+                            games = False
+                    if line.strip().startswith('glitch_mode'):
+                        parsed = line.strip().split('= ')
+                        if parsed[1] == 'True':
+                            glitch_mode = True
+                        else:
+                            glitch_mode = False    
+
+        read_settings()
         QTimer.singleShot(3500, self.close)
 
 class TextEditor(QMainWindow):
@@ -119,7 +120,6 @@ class TextEditor(QMainWindow):
         tools_button = QPushButton('Tools')
         tools_button.setMenu(tools_menu)
         main_toolbar.addWidget(tools_button)
-
 
         prot_stats_action.triggered.connect(self.display_protein_stats)
         seq_find_action.triggered.connect(self.sequence_find_dialog)
@@ -237,7 +237,17 @@ class TextEditor(QMainWindow):
         splitter_widget.setHandleWidth(8)
         splitter_widget.setStyleSheet("QSplitter::handle { background-color: gray; } ")
         splitter_widget.show()
-
+        if background == 'Darkmode' or background == 'Dark_mode.png':
+            tools_button.setStyleSheet('background-color: grey')
+            prot_button.setStyleSheet('background-color: grey')
+            gene_button.setStyleSheet('background-color: grey')
+            phylo_button.setStyleSheet('background-color: grey')
+            settings_button.setStyleSheet('background-color: grey')
+            file_button.setStyleSheet('background-color: grey')
+            save_button.setStyleSheet('background-color: grey')
+            font_button.setStyleSheet('background-color: grey')
+            image_button.setStyleSheet('background-color: grey')
+            self.text_edit.setStyleSheet("background-color: lightgray;") 
         # Create a central widget to hold the splitter widget
         central_widget = QWidget()
         central_layout = QVBoxLayout()
@@ -270,21 +280,16 @@ class TextEditor(QMainWindow):
 
         color_scheme_group = QGroupBox('Color Scheme', settings_window)
         color_scheme_layout = QVBoxLayout()
-        color_scheme_radio1 = QRadioButton('color1')
-        if background == 'src/color1.png':
+        color_scheme_radio1 = QRadioButton('Light_mode')
+        if background == 'Light_mode' or background == "Light_mode.png":
             color_scheme_radio1.setChecked(True)
-        color_scheme_radio2 = QRadioButton('color2')
-        if background == "src/color2.png":
+        color_scheme_radio2 = QRadioButton('Dark_mode')
+        if background == "Dark_mode" or background == "Dark_mode.png":
             color_scheme_radio2.setChecked(True)
-        color_scheme_radio3 = QRadioButton('color3')
-        if background == "src/color3.png":
-            color_scheme_radio3.setChecked(True)
         color_scheme_radio1.toggled.connect(self.update_color_scheme)
         color_scheme_radio2.toggled.connect(self.update_color_scheme)
-        color_scheme_radio3.toggled.connect(self.update_color_scheme)
         color_scheme_layout.addWidget(color_scheme_radio1)
         color_scheme_layout.addWidget(color_scheme_radio2)
-        color_scheme_layout.addWidget(color_scheme_radio3)
         color_scheme_group.setLayout(color_scheme_layout)
 
         games_group = QGroupBox('Games', settings_window)
@@ -713,7 +718,7 @@ class TextEditor(QMainWindow):
             aligned_window.setLayout(aligned_layout)
             aligned_window.setWindowTitle("Protein Sequences (results/output.fasta)")
             aligned_window.exec_()
-        
+
     def gene_bank(button):
         seq, ok_pressed = QInputDialog.getText(None, "Id", "Enter Gene Id:")
         if seq == '':
@@ -743,7 +748,7 @@ class TextEditor(QMainWindow):
         aligned_window.setLayout(aligned_layout)
         aligned_window.setWindowTitle("Genbank Info")
         aligned_window.exec_()
-        
+   
     def from_alignement(self):
         file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "Text Files (*.txt); Fasta Files (*.fasta)")
         # Get the path to the selected file
@@ -759,7 +764,7 @@ class TextEditor(QMainWindow):
                     return 'error'
         run_bmge_on_alignment(file_path, 'results/curated.fasta')
         make_phylo_tree_newick('results/curated.fasta')
-    
+
     def BMGE_curation(button):
         file_path, _ = QFileDialog.getOpenFileName(None, "Open File", "", "Text Files (*.txt); Fasta Files (*.fasta)")
         if file_path != '':
@@ -857,7 +862,7 @@ class TextEditor(QMainWindow):
 
     def save_file(self):
         # Open file dialog to select file to save to
-        file_name, _ = QFileDialog.getSaveFileName(self, 'Save File', '', 'Rich Text Files (*.rtf *.docx);;Text Files (*.txt);;All Files (*)')
+        file_name, _ = QFileDialog.getSaveFileName(self, 'Save File', '', 'Rich Text Files (*.rtf);;Word Document Files (*.docx);;Fasta File (*.fasta);;Text Files (*.txt)')
         if file_name:
             # Write text in text edit widget to file
             with open(file_name, 'w') as file:
