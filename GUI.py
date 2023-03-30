@@ -3,13 +3,15 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from ipywidgets import widgets
 from PyQt5.QtWidgets import QCheckBox, QGroupBox, QRadioButton, QMessageBox, QFormLayout, QLineEdit,QInputDialog, QDialog, QApplication, QMainWindow, QTextEdit, QAction, QFileDialog, QFontDialog, QSplitter, QWidget, QVBoxLayout, QLabel, QToolBar, QPushButton, QHBoxLayout, QMenu
 from PyQt5.QtCore import Qt,QTimer
-from PyQt5.QtGui import QPixmap, QFont, QTextImageFormat, QFontDatabase,QPalette,QBrush
+from PyQt5.QtGui import QPixmap, QFont, QTextImageFormat, QFontDatabase,QPalette,QBrush,QTextDocument
+from PyQt5.QtCore import Qt, QEvent
 from IPython.display import display
 import sys
 import os
 import random
+import subprocess
+import platform
 from src.main import *
-
 
 class PopupWindow(QDialog):
     def __init__(self):
@@ -80,7 +82,7 @@ class PopupWindow(QDialog):
                             glitch_mode = False    
 
         read_settings()
-        QTimer.singleShot(3500, self.close)
+        QTimer.singleShot(2500, self.close)
 
 class TextEditor(QMainWindow):
     # Get the current working directory
@@ -130,7 +132,7 @@ class TextEditor(QMainWindow):
 
         #Create Widget for Prot with sub-buttons
         prot_menu = QMenu('Prot', self)
-        blast = QAction('Blast', self)
+        blast = QAction('Blast (Soon)', self)
         prot_menu.addAction(blast)
         uni_prot = QAction('UniProt', self)
         prot_menu.addAction(uni_prot)
@@ -142,7 +144,7 @@ class TextEditor(QMainWindow):
         gene_menu = QMenu('Gene', self)
         gene_bank = QAction('Genbank Info', self)
         gene_menu.addAction(gene_bank)
-        plasmid_editor = QAction('Plasmid Editor', self)
+        plasmid_editor = QAction('Plasmid Editor (Soon)', self)
         gene_menu.addAction(plasmid_editor)
         gene_button = QPushButton('Gene')
         gene_button.setMenu(gene_menu)
@@ -238,6 +240,7 @@ class TextEditor(QMainWindow):
         splitter_widget.setStyleSheet("QSplitter::handle { background-color: gray; } ")
         splitter_widget.show()
         if background == 'Darkmode' or background == 'Dark_mode.png':
+            main_toolbar.setStyleSheet('background-color: darkgray')
             tools_button.setStyleSheet('background-color: grey')
             prot_button.setStyleSheet('background-color: grey')
             gene_button.setStyleSheet('background-color: grey')
@@ -247,7 +250,7 @@ class TextEditor(QMainWindow):
             save_button.setStyleSheet('background-color: grey')
             font_button.setStyleSheet('background-color: grey')
             image_button.setStyleSheet('background-color: grey')
-            self.text_edit.setStyleSheet("background-color: lightgray;") 
+            self.text_edit.setStyleSheet("background-color: darkgray;") 
         # Create a central widget to hold the splitter widget
         central_widget = QWidget()
         central_layout = QVBoxLayout()
@@ -505,7 +508,6 @@ class TextEditor(QMainWindow):
             msg.setText(f"DNA sequence: {dna_sequence_upper}\nDNAc sequence: {dnac_sequence}")
             msg.exec_()
 
-
     def pattern_frequency_dialog(self):
             # Create a new dialog window
             dialog = QDialog(self)
@@ -531,6 +533,7 @@ class TextEditor(QMainWindow):
             # Set the layout for the dialog and display it
             dialog.setLayout(layout)
             dialog.exec_()
+    
     def perform_pattern_search(self, sequence, pattern_length, dialog):
         # Get all patterns of the specified length from the sequence
         patterns = [sequence[i:i+pattern_length] for i in range(len(sequence)-pattern_length+1)]
@@ -881,6 +884,7 @@ class TextEditor(QMainWindow):
         self.findChild(QToolBar, "Editor Toolbar").show()
         # Show the splitter widget
         self.centralWidget().show()
+    
     def insert_image(self):
         fileName, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
         if fileName:
@@ -888,14 +892,49 @@ class TextEditor(QMainWindow):
             imageFormat.setName(fileName)
             self.text_edit.textCursor().insertImage(imageFormat)
 
+def open_tutorial_pdf():
+    pdf_file = "tutorial.pdf"
+    try:
+        if platform.system() == "Windows":
+            os.startfile(pdf_file)
+        elif platform.system() == "Darwin":
+            subprocess.Popen(["open", pdf_file])
+        else:
+            subprocess.Popen(["xdg-open", pdf_file])
+    except FileNotFoundError:
+        print("The specified file was not found.")
+
 def run_gui():
+    global tutorial
     should_restart = True
     while should_restart:
         app = QApplication(sys.argv)
         popup = PopupWindow()  # create an instance of the PopupWindow class
         popup.exec_()  # show the popup window and wait for it to be closed
+
         editor = TextEditor()
         editor.show()
+        if tutorial == True:
+            open_tutorial_pdf()
+            print('tutorial False now')
+            tutorial = False
+            input_file = "src/settings.txt"
+            output_file = "src/text_temp.txt"
+
+            with open(input_file, 'r') as file:
+                lines = file.readlines()
+
+            with open(output_file, 'w') as file:
+                for line in lines:
+                    if line.strip().startswith('tutorial'):
+                        file.write('tutorial = False\n')
+                    else:
+                        file.write(line)
+
+            # Replace the original file with the modified one
+            import os
+            os.remove(input_file)
+            os.rename(output_file, input_file)
         exit_code = app.exec_()
 
         # Check if the application should restart
