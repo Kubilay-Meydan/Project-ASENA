@@ -1,5 +1,5 @@
-tutorial = True
-background = color1.png
+tutorial = False
+background = Dark_mode.png
 email = None
 games = True
 glitch_mode = False
