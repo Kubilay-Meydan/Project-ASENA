@@ -1,5 +1,5 @@
-tutorial = False
+tutorial = True
 background = Dark_mode.png
 email = None
-games = True
+games = False
 glitch_mode = False
