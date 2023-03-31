@@ -622,7 +622,7 @@ class TextEditor(QMainWindow):
 
     def display_protein_stats(button):
     # Open a dialog window to get user input
-        seq, ok_pressed = QInputDialog.getText(None, "Protein Statistics", "Enter protein sequence in capital letters:")
+        seq, ok_pressed = QInputDialog.getText(None, "Protein Statistics", "Enter a protein sequence of amino acids in capital letters:")
         # Only continue if the user clicked OK
         if ok_pressed:
             if seq == '':
