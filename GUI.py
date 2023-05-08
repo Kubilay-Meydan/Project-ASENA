@@ -144,6 +144,8 @@ class TextEditor(QMainWindow):
         gene_menu = QMenu('Gene', self)
         gene_bank = QAction('Genbank Info', self)
         gene_menu.addAction(gene_bank)
+        RNA_align = QAction('Rna score and alignment',self)
+        gene_menu.addAction(RNA_align)
         plasmid_editor = QAction('Plasmid Editor (Soon)', self)
         gene_menu.addAction(plasmid_editor)
         gene_button = QPushButton('Gene')
@@ -171,6 +173,7 @@ class TextEditor(QMainWindow):
         multiple_alignement.triggered.connect(self.from_alignement)
         gene_bank.triggered.connect(self.gene_bank)
         uni_prot.triggered.connect(self.uniprot)
+        RNA_align.triggered.connect(self.display_rna_stats)
         settings_button = QPushButton('Settings', self)
         main_toolbar.addWidget(settings_button)
         settings_button.clicked.connect(self.show_settings_window)
@@ -664,6 +667,114 @@ class TextEditor(QMainWindow):
 
             stats_window.setLayout(stats_layout)
             stats_window.setWindowTitle("Protein Statistics")
+            stats_window.exec_()
+    
+    def display_rna_stats(button):
+    # Create a custom QDialog to get user input
+        input_dialog = QDialog()
+        input_dialog.setWindowTitle("RNA Statistics")
+
+        layout = QVBoxLayout()
+
+        # Create input fields for RNA sequence 1, sequence 1 structure, and RNA sequence 2
+        rna_seq1_label = QLabel("Enter RNA sequence 1 (in capital letters):")
+        rna_seq1_input = QLineEdit()
+        rna_struct1_label = QLabel("Enter sequence 1 structure: ex: 1-6")
+        rna_struct1_input = QLineEdit()
+        rna_seq2_label = QLabel("Enter RNA sequence 2 (in capital letters):")
+        rna_seq2_input = QLineEdit()
+
+        # Add input fields to the layout
+        layout.addWidget(rna_seq1_label)
+        layout.addWidget(rna_seq1_input)
+        layout.addWidget(rna_struct1_label)
+        layout.addWidget(rna_struct1_input)
+        layout.addWidget(rna_seq2_label)
+        layout.addWidget(rna_seq2_input)
+
+        # Create buttons for submitting and canceling
+        buttons_layout = QHBoxLayout()
+        submit_button = QPushButton("Submit")
+        cancel_button = QPushButton("Cancel")
+
+        buttons_layout.addWidget(submit_button)
+        buttons_layout.addWidget(cancel_button)
+        layout.addLayout(buttons_layout)
+
+        input_dialog.setLayout(layout)
+
+        # Define button actions
+        def on_submit():
+            input_dialog.seq1 = rna_seq1_input.text()
+            input_dialog.struct1 = rna_struct1_input.text()
+            input_dialog.seq2 = rna_seq2_input.text()
+            input_dialog.accept()
+            
+        def on_cancel():
+            input_dialog.reject()
+
+        submit_button.clicked.connect(on_submit)
+        cancel_button.clicked.connect(on_cancel)
+        def parse_ranges(s):
+            ranges = s.split(", ")
+            result = []
+            for r in ranges:
+                start, end = r.split("-")
+                result.append((int(start), int(end)))
+            return result
+        result = input_dialog.exec_()
+        if result == QDialog.Accepted:
+            if not is_valid_enter_RNA(input_dialog.seq1) or not is_valid_enter_RNA(input_dialog.seq2):
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Critical)
+                    msg.setText("Invalid sequence")
+                    msg.setInformativeText("The sequence you entered contains invalid characters. Please enter a valid RNA sequence.")
+                    msg.setWindowTitle("Error")
+                    msg.exec_()
+                    return
+            if len(input_dialog.seq1) != len(input_dialog.seq2):
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Critical)
+                    msg.setText("Invalid sequence")
+                    msg.setInformativeText("The sequences you entered are not the same length.")
+                    msg.setWindowTitle("Error")
+                    msg.exec_()
+                    return
+            if len(input_dialog.struct1) == 0:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Invalid sequence")
+                msg.setInformativeText("Please enter a structure for the first sequence")
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return
+            seq1 = input_dialog.seq1
+            strstruct1 = input_dialog.struct1
+            seq2 = input_dialog.seq2
+            struct1 = parse_ranges(strstruct1)
+            # Compute the edit distance and alignment
+            output = edit_nested_plain(str(seq1), struct1, str(seq2))
+            edit_distance = output[1, len(seq1), 1, len(seq2)]
+            alignment = backtrace(str(seq1), str(seq2), output)
+
+            # Display edit distance and alignment in a new window
+            stats_window = QDialog()
+            stats_layout = QVBoxLayout()
+
+            edit_distance_label = QLabel(f"Edit distance: {edit_distance}")
+            stats_layout.addWidget(edit_distance_label)
+
+            alignment_label = QLabel(f"Alignment:\n{alignment[0]}")
+            stats_layout.addWidget(alignment_label)
+            alignment_label2 = QLabel(f"{alignment[1]}")
+            stats_layout.addWidget(alignment_label2)
+
+            close_button = QPushButton("Close")
+            close_button.clicked.connect(stats_window.close)
+            stats_layout.addWidget(close_button)
+
+            stats_window.setLayout(stats_layout)
+            stats_window.setWindowTitle("RNA Statistics")
             stats_window.exec_()
 
     def uniprot(button):

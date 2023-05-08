@@ -6,7 +6,7 @@ import subprocess
 from Bio import AlignIO
 from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
 from ete3 import Tree
-
+import numpy as np
 
 def search_a_pattern(seq, pattern):
     positions = []
@@ -191,7 +191,6 @@ def make_phylo_tree_newick(fasta_file):
     Phylo.draw(phylo_tree, branch_labels=lambda c: c.branch_length)
     return tree
 
-
 def edit_nested_plain(S1, P1, S2):
     # S1 : séquence primaire
     # P1 : structure imbriquée (sous forme de liste de paires d'indices)
@@ -306,3 +305,4 @@ def is_fasta(filename):
     with open(filename, "r") as handle:
         fasta = SeqIO.parse(handle, "fasta")
         return any(fasta)  # False when `fasta` is empty, i.e. wasn't a FASTA file
+    
