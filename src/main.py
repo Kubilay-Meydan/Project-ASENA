@@ -192,6 +192,116 @@ def make_phylo_tree_newick(fasta_file):
     return tree
 
 
+def edit_nested_plain(S1, P1, S2):
+    # S1 : séquence primaire
+    # P1 : structure imbriquée (sous forme de liste de paires d'indices)
+    # S2 : seconde séquence
+
+    n = len(S1)  # longueur de la séquence primaire
+    m = len(S2)  # longueur de la seconde séquence
+
+    # Initialisation du tableau de programmation dynamique
+    DP = np.full((n+2, n+2, m+2, m+2), np.inf)
+
+    # Paramètres de scoring
+    wm = 1  # pénalité de substitution
+    wd = 1  # pénalité de suppression
+    wa = 1.75  # pénalité de modification d'arc
+    wb = 1.5  # pénalité de rupture d'arc
+    wr = 2  # pénalité de suppression d'arc
+
+    def mismatch(i, j):
+        return 1 if S1[i - 1] != S2[j - 1] else 0
+
+    # Initialisation des cas de base (1)
+    for i in range(1, n+1):
+        for j in range(1, m+1):
+            DP[i, i - 1, j, j - 1] = abs(i - j) * wd
+
+    # Boucle principale
+    for k in range(1, n+1):
+        for i in range(1, n - k + 2):
+            i_prime = i + k - 1
+            for j in range(1, m+1):
+                for j_prime in range(j, m+1):
+
+                    # Cas 3 : l'arc actuel fait partie de la structure imbriquée
+                    if (i, i_prime) in P1:
+                        DP[i, i_prime, j, j_prime] = min(
+                            DP[i+1, i_prime-1, j+1, j_prime-1] + wb + (mismatch(i, j) + mismatch(i_prime, j_prime)) * wm if j < j_prime else np.inf,
+                            DP[i+1, i_prime-1, j, j_prime-1] + wa + mismatch(i_prime, j_prime) * wm,
+                            DP[i+1, i_prime-1, j+1, j_prime] + wa + mismatch(i, j) * wm,
+                            DP[i+1, i_prime-1, j, j_prime] + wr,
+                            DP[i, i_prime, j, j_prime-1] + wd,
+                            DP[i, i_prime, j+1, j_prime] + wd,
+                        )
+                    # Cas 4 : l'arc actuel ne fait pas partie de la structure imbriquée
+                    elif i_prime not in [u[1] for u in P1]:
+                        DP[i, i_prime, j, j_prime] = min(
+                            DP[i, i_prime - 1, j, j_prime - 1] + mismatch(i_prime, j_prime) * wm,
+                            DP[i, i_prime - 1, j, j_prime] + wd,
+                            DP[i, i_prime, j, j_prime - 1] + wd,
+                        )
+                    # Cas 4 : l'arc actuel est adjacent à un arc de la structure imbriquée
+                    else:
+                        min_val = np.inf
+                        for j_double_prime in range(j, j_prime + 1):
+                            cur_val = DP[i, [u[0] for u in P1 if u[1] == i_prime][0] - 1, j, j_double_prime - 1] + \
+                                      DP[[u[0] for u in P1 if u[1] == i_prime][0], i_prime, j_double_prime, j_prime]
+                            min_val = min(min_val, cur_val)
+                            DP[i, i_prime, j, j_prime] = min_val
+                            
+    return DP
+
+def backtrace(seq1, seq2, DP):
+    def match_score(a, b):
+        if a == b:
+            return 1
+        else:
+            return -1
+
+    m = len(seq1)
+    n = len(seq2)
+    score = [[0 for x in range(n + 1)] for y in range(m + 1)]
+
+    dp = DP[0][0]
+
+    for i in range(m + 1):
+        score[i][0] = -i
+
+    for j in range(n + 1):
+        score[0][j] = -j
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            match = score[i - 1][j - 1] + match_score(seq1[i - 1], seq2[j - 1])
+            delete = score[i - 1][j] - 1
+            insert = score[i][j - 1] - 1
+            score[i][j] = max(match, delete, insert)
+
+    align1 = ""
+    align2 = ""
+
+    i = m
+    j = n
+
+    while i > 0 or j > 0:
+        if i > 0 and j > 0 and score[i][j] == score[i - 1][j - 1] + match_score(seq1[i - 1], seq2[j - 1]):
+            align1 = seq1[i - 1] + align1
+            align2 = seq2[j - 1] + align2
+            i -= 1
+            j -= 1
+        elif i > 0 and score[i][j] == score[i - 1][j] - 1:
+            align1 = seq1[i - 1] + align1
+            align2 = "-" + align2
+            i -= 1
+        else:
+            align1 = "-" + align1
+            align2 = seq2[j - 1] + align2
+            j -= 1
+
+    return align1, align2
+
 def is_fasta(filename):
     with open(filename, "r") as handle:
         fasta = SeqIO.parse(handle, "fasta")
